@@ -15,4 +15,9 @@ class AppAsset extends AssetBundle
         'css/normalize.css',
         'css/style.css',
     ];
+
+    public $depends = [
+        'yii\web\YiiAsset',
+        'yii\bootstrap\BootstrapAsset',
+    ];
 }

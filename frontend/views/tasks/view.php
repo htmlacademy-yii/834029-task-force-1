@@ -1,6 +1,8 @@
 <?php
 /* @var $this yii\web\View */
+/* @var $user_id int */
 /* @var $task \common\models\Task */
+/* @var $actions \taskforce\models\actions\AbstractAction[] */
 
 use frontend\components\RatingWidget;
 use yii\helpers\Html;
@@ -62,60 +64,74 @@ use common\models\User;
             </div>
         </div>
         <div class="content-view__action-buttons">
-            <button class=" button button__big-color response-button open-modal"
-                    type="button" data-for="response-form">Откликнуться
-            </button>
-            <button class="button button__big-color refusal-button open-modal"
-                    type="button" data-for="refuse-form">Отказаться
-            </button>
-            <button class="button button__big-color request-button open-modal"
-                    type="button" data-for="complete-form">Завершить
-            </button>
+            <?php foreach($actions as $action) : ?>
+                <button class="button button__big-color <?=$action->getValue()?>-button open-modal"
+                        type="button" data-for="<?=$action->getValue()?>-form"><?=$action->getName()?>
+                </button>
+            <?php endforeach; ?>
         </div>
     </div>
 
     <?php if(count($task->responses) > 0) : ?>
         <div class="content-view__feedback">
-            <h2>Отклики <span>(<?=count($task->responses)?>)</span></h2>
+            <?php if($user_id === $task->customer_id) : ?>
+                <h2>
+                    Отклики <span>(<?=count($task->responses)?>)</span>
+                </h2>
+            <?php endif; ?>
+
             <div class="content-view__feedback-wrapper">
 
                 <?php foreach($task->responses as $response) : ?>
-                    <div class="content-view__feedback-card">
-                        <div class="feedback-card__top">
-                            <?= Html::a(
-                                Html::img(
-                                    $response->worker->avatar ?? Yii::$app->params['user_no_image'],
-                                    ['width' => 55, 'height' => 55]
-                                ),
-                                ['/users/view', 'id' => $response->worker->id]
-                            ) ?>
-                            <div class="feedback-card__top--name">
-                                <p>
-                                    <?=Html::a(
-                                        $response->worker->name,
-                                        ['/users/view', 'id' => $response->worker->id],
-                                        ['class' => 'link-regular']
-                                    )?>
-                                </p>
-                                <?= RatingWidget::widget(['rating' => $response->worker->workerRating]) ?>
+                    <?php if($user_id === $task->customer_id || $user_id === $response->worker_id) : ?>
+                        <div class="content-view__feedback-card">
+                            <div class="feedback-card__top">
+                                <?= Html::a(
+                                    Html::img(
+                                        $response->worker->avatar ?? Yii::$app->params['user_no_image'],
+                                        ['width' => 55, 'height' => 55]
+                                    ),
+                                    ['/users/view', 'id' => $response->worker->id]
+                                ) ?>
+                                <div class="feedback-card__top--name">
+                                    <p>
+                                        <?=Html::a(
+                                            $response->worker->name,
+                                            ['/users/view', 'id' => $response->worker->id],
+                                            ['class' => 'link-regular']
+                                        )?>
+                                    </p>
+                                    <?= RatingWidget::widget(['rating' => $response->worker->workerRating]) ?>
+                                </div>
+                                <span class="new-task__time">
+                                    <?=Yii::$app->formatter->asRelativeTime($response->created_at)?>
+                                </span>
                             </div>
-                            <span class="new-task__time">
-                                <?=Yii::$app->formatter->asRelativeTime($response->created_at)?>
-                            </span>
+                            <div class="feedback-card__content">
+                                <p>
+                                    <?=$response->comment?>
+                                </p>
+                                <span><?=$response->price?> ₽</span>
+                            </div>
+
+                            <?php if($user_id === $task->customer_id &&
+                                    $task->isNew() &&
+                                    $response->isNew()) : ?>
+                                <div class="feedback-card__actions">
+                                    <?= Html::a(
+                                        'Подтвердить',
+                                        ['/response/accept', 'id' => $response->id],
+                                        ['class' => 'button__small-color response-button button', 'type' => 'button']
+                                    ) ?>
+                                    <?= Html::a(
+                                        'Отказать',
+                                        ['/response/refuse', 'id' => $response->id],
+                                        ['class' => 'button__small-color refuse-button button', 'type' => 'button']
+                                    ) ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
-                        <div class="feedback-card__content">
-                            <p>
-                                <?=$response->comment?>
-                            </p>
-                            <span><?=$response->price?> ₽</span>
-                        </div>
-                        <div class="feedback-card__actions">
-                            <a class="button__small-color response-button button"
-                               type="button">Подтвердить</a>
-                            <a class="button__small-color refusal-button button"
-                               type="button">Отказать</a>
-                        </div>
-                    </div>
+                    <?php endif; ?>
                 <?php endforeach; ?>
 
             </div>
@@ -219,7 +235,7 @@ use common\models\User;
     </form>
     <button class="form-modal-close" type="button">Закрыть</button>
 </section>
-<section class="modal form-modal refusal-form" id="refuse-form">
+<section class="modal form-modal refuse-form" id="refuse-form">
     <h2>Отказ от задания</h2>
     <p>
         Вы собираетесь отказаться от выполнения задания.
@@ -229,8 +245,18 @@ use common\models\User;
     <button class="button__form-modal button" id="close-modal"
             type="button">Отмена
     </button>
-    <button class="button__form-modal refusal-button button"
+    <button class="button__form-modal refuse-button button"
             type="button">Отказаться
+    </button>
+    <button class="form-modal-close" type="button">Закрыть</button>
+</section>
+<section class="modal form-modal cancel-form" id="cancel-form">
+    <h2>Отмена задания</h2>
+    <p>
+        Вы уверены, что хотите отменить задание?
+    </p>
+    <button class="button__form-modal refuse-button button" type="button">
+        Отменить
     </button>
     <button class="form-modal-close" type="button">Закрыть</button>
 </section>

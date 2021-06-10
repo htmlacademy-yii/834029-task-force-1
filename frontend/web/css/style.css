@@ -847,13 +847,13 @@ footer {
 .response-button {
   background-color: #ffaa00; }
 
-.refusal-button {
+.refuse-button {
   background-color: #ff3d71; }
 
 .connection-button {
   background-color: #00e096; }
 
-.request-button {
+.complete-button {
   background-color: #3366ff;
 }
 
@@ -882,7 +882,7 @@ footer {
   top: 6px;
   left: 7px; }
 
-.feedback-card__actions .refusal-button::before {
+.feedback-card__actions .refuse-button::before {
   position: absolute;
   content: "";
   width: 19px;
@@ -2514,11 +2514,11 @@ footer {
   margin-left: -260px;
   display: none; }
 
-.refusal-form {
+.refuse-form, .cancel-form {
   width: 460px;
   margin-left: -260px;
   display: none; }
-  .refusal-form p {
+  .refuse-form p, .cancel-form p {
     background-color: #ff7675;
     padding: 20px;
     padding-right: 10px;

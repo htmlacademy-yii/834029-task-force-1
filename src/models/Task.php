@@ -63,9 +63,7 @@ class Task {
             case self::STATUS_NEW:
                 return [
                     new RespondAction(),
-                    new RefuseAction(),
                     new CancelAction(),
-                    new ApproveAction()
                 ];
             case self::STATUS_IN_WORK:
                 return [
@@ -79,12 +77,9 @@ class Task {
         }
     }
 
-    public function getAvailableActions(string $status, int $user_id): array
+    public function getAvailableActions(int $user_id): array
     {
-        if(!self::validateStatus($status)) {
-            throw new NotValidStatusException('Не корректный статус');
-        }
-        $actionsArray = self::getAvailableActionsForStatus($status);
+        $actionsArray = self::getAvailableActionsForStatus($this->current_status);
         $result = [];
         if(!empty($actionsArray)) {
             foreach($actionsArray as $action) {

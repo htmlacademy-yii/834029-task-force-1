@@ -6,6 +6,33 @@ use common\models\base\File;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
 
+/**
+ * This is the model class for table "task".
+ *
+ * @property int $id
+ * @property string $title
+ * @property string $description
+ * @property int|null $price
+ * @property int $category_id
+ * @property string $created_at
+ * @property string|null $finish_at
+ * @property string $status
+ * @property float|null $latitude
+ * @property float|null $longitude
+ * @property int|null $city_id
+ * @property int $customer_id
+ * @property int|null $worker_id
+ * @property string|null $attach_id
+ *
+ * @property Message[] $messages
+ * @property Response[] $responses
+ * @property Review[] $reviews
+ * @property File $attach
+ * @property Category $category
+ * @property City $city
+ * @property User $customer
+ * @property User $worker
+ */
 class Task extends base\Task
 {
     public const SHORT_DESCRIPTION_LENGTH = 50;
@@ -96,5 +123,8 @@ class Task extends base\Task
         }
     }
 
-
+    public function isNew(): bool
+    {
+        return $this->status === \taskforce\models\Task::STATUS_NEW;
+    }
 }

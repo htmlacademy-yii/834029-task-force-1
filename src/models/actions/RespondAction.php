@@ -9,18 +9,18 @@ use taskforce\models\Task;
 class RespondAction extends AbstractAction
 {
 
-    public function getValue() :string
+    public function getValue(): string
     {
-        return 'respond';
+        return 'response';
     }
 
-    public function getName() :string
+    public function getName(): string
     {
         return 'Откликнуться';
     }
 
-    public function checkPermission(int $worker_id, int $customer_id, int $user_id) :bool
+    public function checkPermission(int $worker_id, int $customer_id, int $user_id): bool
     {
-        return $worker_id === $user_id;
+        return $customer_id !== $user_id;
     }
 }

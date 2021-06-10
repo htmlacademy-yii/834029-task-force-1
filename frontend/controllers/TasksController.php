@@ -37,7 +37,7 @@ class TasksController extends BaseController
         return $rules;
     }
 
-    public function actionIndex()
+    public function actionIndex(): string
     {
         $categories = ArrayHelper::map(Category::find()->all(), 'id', 'title');
         $filter = new TaskFilterForm();
@@ -59,18 +59,25 @@ class TasksController extends BaseController
         ]);
     }
 
-    public function actionView($id)
+    public function actionView($id): string
     {
+        $user_id = Yii::$app->user->identity->getId();
         $task = Task::findOne($id);
-
         if (!$task) {
             throw new NotFoundHttpException('Страница не найдена');
         }
 
-        return $this->render('view', compact('task'));
+        $task_with_status = new \taskforce\models\Task(
+            $task->customer_id,
+            $task->worker_id ?? 0,
+            $task->status
+        );
+        $actions = $task_with_status->getAvailableActions($user_id);
+
+        return $this->render('view', compact('actions', 'task', 'user_id'));
     }
 
-    public function actionCreate()
+    public function actionCreate(): string
     {
         $model = new CreateTaskForm();
         $categories = Category::find()->select(['title'])->indexBy('id')->column();
