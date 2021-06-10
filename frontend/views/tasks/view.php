@@ -5,7 +5,9 @@
 use frontend\components\RatingWidget;
 use yii\helpers\Html;
 use common\models\User;
+use common\models\Response;
 
+$user_id = Yii::$app->user->getId();
 ?>
 
 <section class="content-view">
@@ -76,46 +78,64 @@ use common\models\User;
 
     <?php if(count($task->responses) > 0) : ?>
         <div class="content-view__feedback">
-            <h2>Отклики <span>(<?=count($task->responses)?>)</span></h2>
+            <?php if($user_id === $task->customer_id) : ?>
+                <h2>
+                    Отклики <span>(<?=count($task->responses)?>)</span>
+                </h2>
+            <?php endif; ?>
+
             <div class="content-view__feedback-wrapper">
 
                 <?php foreach($task->responses as $response) : ?>
-                    <div class="content-view__feedback-card">
-                        <div class="feedback-card__top">
-                            <?= Html::a(
-                                Html::img(
-                                    $response->worker->avatar ?? Yii::$app->params['user_no_image'],
-                                    ['width' => 55, 'height' => 55]
-                                ),
-                                ['/users/view', 'id' => $response->worker->id]
-                            ) ?>
-                            <div class="feedback-card__top--name">
-                                <p>
-                                    <?=Html::a(
-                                        $response->worker->name,
-                                        ['/users/view', 'id' => $response->worker->id],
-                                        ['class' => 'link-regular']
-                                    )?>
-                                </p>
-                                <?= RatingWidget::widget(['rating' => $response->worker->workerRating]) ?>
+                    <?php if($user_id === $task->customer_id || $user_id === $response->worker_id) : ?>
+                        <div class="content-view__feedback-card">
+                            <div class="feedback-card__top">
+                                <?= Html::a(
+                                    Html::img(
+                                        $response->worker->avatar ?? Yii::$app->params['user_no_image'],
+                                        ['width' => 55, 'height' => 55]
+                                    ),
+                                    ['/users/view', 'id' => $response->worker->id]
+                                ) ?>
+                                <div class="feedback-card__top--name">
+                                    <p>
+                                        <?=Html::a(
+                                            $response->worker->name,
+                                            ['/users/view', 'id' => $response->worker->id],
+                                            ['class' => 'link-regular']
+                                        )?>
+                                    </p>
+                                    <?= RatingWidget::widget(['rating' => $response->worker->workerRating]) ?>
+                                </div>
+                                <span class="new-task__time">
+                                    <?=Yii::$app->formatter->asRelativeTime($response->created_at)?>
+                                </span>
                             </div>
-                            <span class="new-task__time">
-                                <?=Yii::$app->formatter->asRelativeTime($response->created_at)?>
-                            </span>
+                            <div class="feedback-card__content">
+                                <p>
+                                    <?=$response->comment?>
+                                </p>
+                                <span><?=$response->price?> ₽</span>
+                            </div>
+
+                            <?php if($user_id === $task->customer_id &&
+                                    $task->status === \taskforce\models\Task::STATUS_NEW &&
+                                    $response->status === Response::STATUS_NEW) : ?>
+                                <div class="feedback-card__actions">
+                                    <?= Html::a(
+                                        'Подтвердить',
+                                        ['/response/accept', 'id' => $response->id],
+                                        ['class' => 'button__small-color response-button button', 'type' => 'button']
+                                    ) ?>
+                                    <?= Html::a(
+                                        'Отказать',
+                                        ['/response/refuse', 'id' => $response->id],
+                                        ['class' => 'button__small-color refusal-button button', 'type' => 'button']
+                                    ) ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
-                        <div class="feedback-card__content">
-                            <p>
-                                <?=$response->comment?>
-                            </p>
-                            <span><?=$response->price?> ₽</span>
-                        </div>
-                        <div class="feedback-card__actions">
-                            <a class="button__small-color response-button button"
-                               type="button">Подтвердить</a>
-                            <a class="button__small-color refusal-button button"
-                               type="button">Отказать</a>
-                        </div>
-                    </div>
+                    <?php endif; ?>
                 <?php endforeach; ?>
 
             </div>
