@@ -8,6 +8,7 @@ use common\models\Task;
 use common\models\User;
 use frontend\models\CreateTaskForm;
 use frontend\models\TaskFilterForm;
+use taskforce\models\actions\RespondAction;
 use Yii;
 use yii\bootstrap\ActiveForm;
 use yii\filters\AccessControl;
@@ -67,14 +68,31 @@ class TasksController extends BaseController
             throw new NotFoundHttpException('Страница не найдена');
         }
 
+        $is_customer = $user_id === $task->customer_id;
         $task_with_status = new \taskforce\models\Task(
             $task->customer_id,
             $task->worker_id ?? 0,
             $task->status
         );
         $actions = $task_with_status->getAvailableActions($user_id);
+        $user_has_response = false;
 
-        return $this->render('view', compact('actions', 'task', 'user_id'));
+        if ($task->isNew()) {
+            foreach($task->responses as $response) {
+                if ($response->worker_id === $user_id) {
+                    $user_has_response = true;
+                    unset($actions[(new RespondAction())->getValue()]);
+                }
+            }
+        }
+
+        return $this->render('view', compact(
+            'actions',
+            'task',
+            'user_id',
+            'is_customer',
+            'user_has_response'
+        ));
     }
 
     public function actionCreate(): string

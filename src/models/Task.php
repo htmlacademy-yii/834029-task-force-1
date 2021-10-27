@@ -75,6 +75,8 @@ class Task {
             case self::STATUS_COMPLETED:
                 return [];
         }
+
+        return [];
     }
 
     public function getAvailableActions(int $user_id): array
@@ -83,8 +85,9 @@ class Task {
         $result = [];
         if(!empty($actionsArray)) {
             foreach($actionsArray as $action) {
+                /** @var AbstractAction $action */
                 if($action->checkPermission($this->worker_id, $this->customer_id, $user_id)) {
-                    $result[] = $action;
+                    $result[$action->getValue()] = $action;
                 }
             }
         }

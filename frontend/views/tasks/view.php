@@ -1,10 +1,14 @@
 <?php
 /* @var $this yii\web\View */
 /* @var $user_id int */
+/* @var $is_customer bool */
+/* @var $user_has_response bool */
 /* @var $task \common\models\Task */
 /* @var $actions \taskforce\models\actions\AbstractAction[] */
 
 use frontend\components\RatingWidget;
+use yii\helpers\Url;
+use yii\widgets\ActiveForm;
 use yii\helpers\Html;
 use common\models\User;
 
@@ -25,7 +29,7 @@ use common\models\User;
                         <?=Yii::$app->formatter->asRelativeTime($task->created_at)?>
                     </span>
                 </div>
-                <?php if($task->price) : ?>
+                <?php if ($task->price) : ?>
                     <b class="new-task__price new-task__price--<?=$task->category->code?> content-view-price">
                         <?=$task->price?><b> ₽</b>
                     </b>
@@ -39,7 +43,7 @@ use common\models\User;
                 </p>
             </div>
 
-            <?php if(count($task->files) > 0) : ?>
+            <?php if (count($task->files) > 0) : ?>
                 <div class="content-view__attach">
                     <h3 class="content-view__h3">Вложения</h3>
                     <?php foreach($task->files as $file) : ?>
@@ -63,27 +67,34 @@ use common\models\User;
                 </div>
             </div>
         </div>
-        <div class="content-view__action-buttons">
-            <?php foreach($actions as $action) : ?>
-                <button class="button button__big-color <?=$action->getValue()?>-button open-modal"
-                        type="button" data-for="<?=$action->getValue()?>-form"><?=$action->getName()?>
-                </button>
-            <?php endforeach; ?>
-        </div>
+
+        <?php if (!empty($actions)) : ?>
+            <div class="content-view__action-buttons">
+                <?php foreach($actions as $action) : ?>
+                    <button class="button button__big-color <?=$action->getValue()?>-button open-modal"
+                            type="button" data-for="<?=$action->getValue()?>-form"><?=$action->getName()?>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 
-    <?php if(count($task->responses) > 0) : ?>
+    <?php if (count($task->responses) > 0 && ($is_customer || $user_has_response)) : ?>
         <div class="content-view__feedback">
-            <?php if($user_id === $task->customer_id) : ?>
+            <?php if ($is_customer) : ?>
                 <h2>
                     Отклики <span>(<?=count($task->responses)?>)</span>
+                </h2>
+            <?php elseif ($user_has_response) : ?>
+                <h2>
+                    Ваш отклик
                 </h2>
             <?php endif; ?>
 
             <div class="content-view__feedback-wrapper">
 
                 <?php foreach($task->responses as $response) : ?>
-                    <?php if($user_id === $task->customer_id || $user_id === $response->worker_id) : ?>
+                    <?php if ($is_customer || $user_id === $response->worker_id) : ?>
                         <div class="content-view__feedback-card">
                             <div class="feedback-card__top">
                                 <?= Html::a(
@@ -114,7 +125,7 @@ use common\models\User;
                                 <span><?=$response->price?> ₽</span>
                             </div>
 
-                            <?php if($user_id === $task->customer_id &&
+                            <?php if ($is_customer &&
                                     $task->isNew() &&
                                     $response->isNew()) : ?>
                                 <div class="feedback-card__actions">
@@ -149,7 +160,7 @@ use common\models\User;
                     $task->customer->avatar ?? Yii::$app->params['user_no_image'],
                     ['width' => 62, 'height' => 62]
                 );
-                echo ($task->customer->role === User::WORKER_ROLE) ?
+                echo ($task->customer->isWorker()) ?
                     Html::a(
                         $avatar,
                         ['/users/view', 'id' => $task->customer->id]
@@ -173,7 +184,7 @@ use common\models\User;
                 </span>
             </p>
 
-            <?php if($task->customer->role === User::WORKER_ROLE) : ?>
+            <?php if ($task->customer->isWorker()) : ?>
                 <?= Html::a(
                     'Смотреть профиль',
                     ['/users/view', 'id' => $task->customer->id],
@@ -188,23 +199,36 @@ use common\models\User;
     </div>
 </section>
 
-<section class="modal response-form form-modal" id="response-form">
-    <h2>Отклик на задание</h2>
-    <form action="#" method="post">
-        <p>
-            <label class="form-modal-description" for="response-payment">Ваша цена</label>
-            <input class="response-form-payment input input-middle input-money" type="text" name="response-payment"
-                   id="response-payment">
-        </p>
-        <p>
-            <label class="form-modal-description" for="response-comment">Комментарий</label>
-            <textarea class="input textarea" rows="4" id="response-comment" name="response-comment"
-                      placeholder="Place your text"></textarea>
-        </p>
-        <button class="button modal-button" type="submit">Отправить</button>
-    </form>
-    <button class="form-modal-close" type="button">Закрыть</button>
-</section>
+<?php if (!$is_customer && $task->isNew()) : ?>
+    <?php $add_response_form = new \frontend\models\AddResponseForm(); ?>
+    <section class="modal response-form form-modal" id="response-form">
+        <h2>Отклик на задание</h2>
+        <?php
+        $form = ActiveForm::begin([
+            'enableClientValidation' => false,
+            'action' => Url::to(['/response/add', 'task_id' => $task->id]),
+            'fieldConfig' => [
+                'options' => [
+                    'tag' => 'p'
+                ],
+                'labelOptions' => ['class' => 'form-modal-description'],
+                'errorOptions' => ['class' => 'registration__text-error', 'tag' => 'span']
+            ],
+        ]); ?>
+
+        <?= $form->field($add_response_form, 'price', ['options' => ['class' => 'field-container create__price-time--wrapper']])
+            ->input('text', ['class' => 'response-form-payment input input-middle input-money'])?>
+
+        <?= $form->field($add_response_form, 'comment')
+            ->textarea(['class' => 'input textarea', 'placeholder' => 'Текст комментария', 'rows' => 4])?>
+
+        <?= Html::button('Отправить', ['type' => 'submit', 'class' => 'button modal-button']) ?>
+        <?php ActiveForm::end(); ?>
+
+        <button class="form-modal-close" type="button">Закрыть</button>
+    </section>
+<?php endif; ?>
+
 <section class="modal completion-form form-modal" id="complete-form">
     <h2>Завершение задания</h2>
     <p class="form-modal-description">Задание выполнено?</p>

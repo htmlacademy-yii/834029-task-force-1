@@ -97,6 +97,16 @@ class User extends base\User implements IdentityInterface
         return Yii::$app->formatter->asDuration($diff) . ' на сайте';
     }
 
+    public function isCustomer() : bool
+    {
+        return $this->role === self::CUSTOMER_ROLE;
+    }
+
+    public function isWorker() : bool
+    {
+        return $this->role === self::WORKER_ROLE;
+    }
+
     public function validatePassword($password) : bool
     {
         return Yii::$app->security->validatePassword($password, $this->password_hash);

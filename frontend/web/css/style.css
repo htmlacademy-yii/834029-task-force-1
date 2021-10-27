@@ -2474,6 +2474,7 @@ footer {
   width: 300px;
   z-index: 30;
   left: 50%;
+  bottom: unset;
   margin-left: -180px;
   padding-left: 20px;
   padding-right: 20px;

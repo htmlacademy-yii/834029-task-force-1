@@ -19,7 +19,7 @@ class CreateTaskForm extends Model
     public $city_id;
     public $attach_id;
 
-    public function attributeLabels() : array
+    public function attributeLabels(): array
     {
         return [
             'title' => 'Мне нужно',
@@ -32,7 +32,7 @@ class CreateTaskForm extends Model
         ];
     }
 
-    public function rules() : array
+    public function rules(): array
     {
         return [
             [['title', 'description', 'category_id'], 'required'],

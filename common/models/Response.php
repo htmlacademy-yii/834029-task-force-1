@@ -3,6 +3,8 @@
 namespace common\models;
 
 use Yii;
+use yii\behaviors\TimestampBehavior;
+use yii\db\Expression;
 
 /**
  * This is the model class for table "response".
@@ -23,6 +25,20 @@ class Response extends base\Response
     public const STATUS_NEW = 'new';
     public const STATUS_ACCEPTED = 'accepted';
     public const STATUS_REFUSED = 'refused';
+
+    public function behaviors() : array
+    {
+        return [
+            'timestamp' => [
+                'class' => TimestampBehavior::class,
+                'attributes' => [
+                    \yii\db\BaseActiveRecord::EVENT_BEFORE_INSERT => ['created_at'],
+                    \yii\db\BaseActiveRecord::EVENT_BEFORE_UPDATE => false,
+                ],
+                'value' => new Expression('NOW()'),
+            ],
+        ];
+    }
 
     public function rules()
     {
