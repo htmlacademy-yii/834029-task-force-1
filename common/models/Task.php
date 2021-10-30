@@ -107,12 +107,12 @@ class Task extends base\Task
         return $this->hasOne(User::class, ['id' => 'customer_id']);
     }
 
-    public function getFiles() : \yii\db\ActiveQuery
+    public function getFiles(): \yii\db\ActiveQuery
     {
         return $this->hasMany(File::class, ['attach_id' => 'attach_id']);
     }
 
-    public function getShortDescription() : string
+    public function getShortDescription(): string
     {
         if (strlen($this->description) > self::SHORT_DESCRIPTION_LENGTH) {
             $description = substr($this->description, 0, self::SHORT_DESCRIPTION_LENGTH);
@@ -126,5 +126,19 @@ class Task extends base\Task
     public function isNew(): bool
     {
         return $this->status === \taskforce\models\Task::STATUS_NEW;
+    }
+
+    public function inWork(): bool
+    {
+        return $this->status === \taskforce\models\Task::STATUS_IN_WORK;
+    }
+
+    public function canUserChangeStatus(int $customer_id): bool
+    {
+        if($this->customer_id === $customer_id) {
+            return true;
+        }
+
+        return false;
     }
 }

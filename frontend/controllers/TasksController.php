@@ -6,21 +6,31 @@ use common\models\Category;
 use common\models\File;
 use common\models\Task;
 use common\models\User;
+use frontend\models\CompleteTaskForm;
 use frontend\models\CreateTaskForm;
 use frontend\models\TaskFilterForm;
 use taskforce\models\actions\RespondAction;
+use taskforce\services\StatusService;
 use Yii;
 use yii\bootstrap\ActiveForm;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\helpers\FileHelper;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
 
 class TasksController extends BaseController
 {
     public $enableCsrfValidation = false;
+    protected StatusService $statusService;
+
+    public function __construct($id, $module, StatusService $statusService, $config = [])
+    {
+        $this->statusService = $statusService;
+        parent::__construct($id, $module, $config);
+    }
 
     public function behaviors() : array
     {
@@ -127,5 +137,26 @@ class TasksController extends BaseController
         }
 
         return false;
+    }
+
+    public function actionComplete(int $task_id)
+    {
+        $task = Task::findOne($task_id);
+        if (!$task) {
+            throw new NotFoundHttpException('Задание не найдено');
+        }
+
+        if (!$task->canUserChangeStatus(Yii::$app->user->identity->getId())) {
+            throw new ForbiddenHttpException('Невозможно выполнить действие');
+        }
+
+        $model = new CompleteTaskForm();
+        $model->load(Yii::$app->request->post());
+
+        if ($model->validate() && $this->statusService->completeTask($task, $model)) {
+            return $this->redirect(['/tasks/view', 'id' => $task_id]);
+        }
+
+        throw new ForbiddenHttpException('Ошибка при завершении задания');
     }
 }

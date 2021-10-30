@@ -4,6 +4,8 @@ namespace taskforce\services;
 
 use common\models\Response;
 use common\models\Task;
+use frontend\models\CompleteTaskForm;
+use taskforce\models\exceptions\CantCompleteTaskException;
 
 class StatusService
 {
@@ -31,5 +33,34 @@ class StatusService
     {
         $response->status = Response::STATUS_REFUSED;
         $response->save();
+    }
+
+    public function completeTask(Task $task, CompleteTaskForm $form): bool
+    {
+        $transaction = Task::getDb()->beginTransaction();
+        try {
+            switch ($form->isComplete) {
+                case $form::COMPLETE:
+                    $task->status = \taskforce\models\Task::STATUS_COMPLETED;
+                    break;
+                case $form::DIFFICULT:
+                    $task->status = \taskforce\models\Task::STATUS_FAILED;
+                    break;
+                default:
+                    throw new CantCompleteTaskException();
+            }
+            $task->save();
+
+            if (!$form->createReview($task)) {
+                throw new CantCompleteTaskException();
+            }
+
+            $transaction->commit();
+        } catch(\Throwable $e) {
+            $transaction->rollBack();
+            return false;
+        }
+
+        return true;
     }
 }
