@@ -41,6 +41,12 @@ class StatusService
         $task->save();
     }
 
+    public function cancelTask(Task $task): void
+    {
+        $task->status = \taskforce\models\Task::STATUS_CANCELED;
+        $task->save();
+    }
+
     public function completeTask(Task $task, CompleteTaskForm $form): bool
     {
         $transaction = Task::getDb()->beginTransaction();

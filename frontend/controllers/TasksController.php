@@ -183,4 +183,20 @@ class TasksController extends BaseController
 
         throw new ForbiddenHttpException('Ошибка при отказе от задания');
     }
+
+    public function actionCancel(int $id): \yii\web\Response
+    {
+        $task = Task::findOne($id);
+        $user_id = Yii::$app->user->identity->getId();
+        if (!$task) {
+            throw new NotFoundHttpException('Задание не найдено');
+        }
+
+        if (!$task->isNew() || $task->customer_id !== $user_id) {
+            throw new ForbiddenHttpException('Невозможно выполнить действие');
+        }
+
+        $this->statusService->cancelTask($task);
+        return $this->redirect(['/tasks/view', 'id' => $id]);
+    }
 }
