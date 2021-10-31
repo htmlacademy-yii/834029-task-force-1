@@ -33,7 +33,7 @@ class TasksController extends BaseController
         parent::__construct($id, $module, $config);
     }
 
-    public function behaviors() : array
+    public function behaviors(): array
     {
         $rules = parent::behaviors();
         $rule = [
@@ -128,7 +128,7 @@ class TasksController extends BaseController
         return $this->render('create', compact('model', 'categories'));
     }
 
-    public function actionLoadFiles() : bool
+    public function actionLoadFiles(): bool
     {
         if (Yii::$app->request->isAjax) {
             $files = UploadedFile::getInstancesByName('files');

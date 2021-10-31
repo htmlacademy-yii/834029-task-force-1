@@ -1,8 +1,6 @@
 <?php
 
-
 namespace frontend\controllers;
-
 
 use common\models\Response;
 use common\models\Task;
@@ -24,7 +22,7 @@ class ResponseController extends BaseController
         parent::__construct($id, $module, $config);
     }
 
-    public function behaviors() : array
+    public function behaviors(): array
     {
         $rules = parent::behaviors();
         $rule = [
@@ -73,7 +71,7 @@ class ResponseController extends BaseController
         return $this->redirect(['/tasks/view', 'id' => $response->task_id]);
     }
 
-    private function findModel($id) : ?Response
+    private function findModel($id): ?Response
     {
         if (($model = Response::findOne($id)) !== null) {
             return $model;
@@ -82,7 +80,7 @@ class ResponseController extends BaseController
         throw new NotFoundHttpException('Отклик не найден.');
     }
 
-    public function actionAdd($task_id)
+    public function actionAdd($task_id): \yii\web\Response
     {
         $user_id = Yii::$app->user->identity->getId();
         $response = Response::find()->where([

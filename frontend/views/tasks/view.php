@@ -199,138 +199,19 @@ use yii\helpers\Html;
 </section>
 
 <?php if (!$is_customer && $task->isNew()) : ?>
-    <?php $add_response_form = new \frontend\models\AddResponseForm(); ?>
-    <section class="modal response-form form-modal" id="response-form">
-        <h2>Отклик на задание</h2>
-        <?php
-        $form = ActiveForm::begin([
-            'enableClientValidation' => false,
-            'action' => Url::to(['/response/add', 'task_id' => $task->id]),
-            'fieldConfig' => [
-                'options' => [
-                    'tag' => 'p'
-                ],
-                'labelOptions' => ['class' => 'form-modal-description'],
-                'errorOptions' => ['class' => 'registration__text-error', 'tag' => 'span']
-            ],
-        ]); ?>
-
-        <?= $form->field($add_response_form, 'price', ['options' => ['class' => 'field-container create__price-time--wrapper']])
-            ->input('text', ['class' => 'response-form-payment input input-middle input-money'])?>
-
-        <?= $form->field($add_response_form, 'comment')
-            ->textarea(['class' => 'input textarea', 'placeholder' => 'Текст комментария', 'rows' => 4])?>
-
-        <?= Html::button('Отправить', ['type' => 'submit', 'class' => 'button modal-button']) ?>
-        <?php ActiveForm::end(); ?>
-
-        <button class="form-modal-close" type="button">Закрыть</button>
-    </section>
+    <?= $this->render('modals/_addResponseForm', ['task' => $task]) ?>
 <?php endif; ?>
 
 <?php if ($is_customer && $task->inWork()) : ?>
-    <section class="modal completion-form form-modal" id="complete-form">
-        <h2>Завершение задания</h2>
-        <p class="form-modal-description">Задание выполнено?</p>
-        <?php $complete_task_form = new \frontend\models\CompleteTaskForm(); ?>
-        <?php
-        $form = ActiveForm::begin([
-            'enableClientValidation' => false,
-            'action' => Url::to(['/tasks/complete', 'task_id' => $task->id]),
-            'fieldConfig' => [
-                'template' => "{label}\n{input}\n",
-                'options' => [
-                    'tag' => false,
-                ],
-                'labelOptions' => ['class' => 'form-modal-description'],
-                'errorOptions' => ['class' => 'registration__text-error', 'tag' => 'span']
-            ],
-        ]); ?>
-
-            <?=
-            $form->field($complete_task_form, 'isComplete')
-                ->radioList(
-                    [$complete_task_form::COMPLETE => 'Да', $complete_task_form::DIFFICULT => 'Возникли проблемы'],
-                    [
-                        'tag' => false,
-                        'item' => function($index, $label, $name, $checked, $value) {
-
-                            $return = '<input id="completion-radio--' . $value .'" type="radio" ';
-                            $return .= 'class="visually-hidden completion-input completion-input--' . $value . '" ';
-                            $return .= 'name="' . $name . '" value="' . $value . '">';
-                            $return .= '<label class="completion-label completion-label--' . $value . '" ';
-                            $return .= 'for="completion-radio--' . $value . '">' . $label . '</label>';
-
-                            return $return;
-                        }
-                    ]
-                )
-                ->label(false);
-            ?>
-            <p>
-                <?= $form->field($complete_task_form, 'comment')
-                    ->textarea(['class' => 'input textarea', 'placeholder' => 'Текст комментария', 'rows' => 4])?>
-            </p>
-            <p class="form-modal-description">
-                Оценка
-                <div class="feedback-card__top--name completion-form-star">
-                    <span class="star-disabled"></span>
-                    <span class="star-disabled"></span>
-                    <span class="star-disabled"></span>
-                    <span class="star-disabled"></span>
-                    <span class="star-disabled"></span>
-                </div>
-            </p>
-            <?= $form->field($complete_task_form, 'rating')->hiddenInput(['id'=> 'rating'])->label(false);?>
-            <?= Html::button('Отправить', ['type' => 'submit', 'class' => 'button modal-button']) ?>
-        <?php ActiveForm::end(); ?>
-        <button class="form-modal-close" type="button">Закрыть</button>
-    </section>
+    <?= $this->render('modals/_completeTaskForm', ['task' => $task]) ?>
 <?php endif; ?>
 
 <?php if ($task->isWorker($user_id)) : ?>
-    <section class="modal form-modal refuse-form" id="refuse-form">
-        <h2>Отказ от задания</h2>
-        <p>
-            Вы собираетесь отказаться от выполнения задания.
-            Это действие приведёт к снижению вашего рейтинга.
-            Вы уверены?
-        </p>
-        <button class="button__form-modal button" id="close-modal"
-                type="button">Отмена
-        </button>
-        <?php $refuse_task_form = new \frontend\models\RefuseTaskForm(); ?>
-        <?php
-        $form = ActiveForm::begin([
-            'enableClientValidation' => false,
-            'action' => Url::to(['/tasks/refuse', 'id' => $task->id]),
-            'fieldConfig' => [
-                'template' => "{input}",
-            ],
-        ]); ?>
-            <?=$form->field($refuse_task_form, 'refuse')->hiddenInput()?>
-            <?= Html::button(
-                    'Отказаться',
-                    ['type' => 'submit', 'class' => 'button__form-modal refuse-button button']
-            ) ?>
-        <?php ActiveForm::end(); ?>
-        <button class="form-modal-close" type="button">Закрыть</button>
-    </section>
+    <?= $this->render('modals/_refuseTaskForm', ['task' => $task]) ?>
 <?php endif; ?>
 
 <?php if ($is_customer && $task->isNew()) : ?>
-    <section class="modal form-modal cancel-form" id="cancel-form">
-        <h2>Отмена задания</h2>
-        <p>
-            Вы уверены, что хотите отменить задание?
-        </p>
-        <?= Html::a(
-            'Отменить',
-            ['cancel', 'id' => $task->id],
-            ['class' => 'button__form-modal refuse-button button']
-        ) ?>
-        <button class="form-modal-close" type="button">Закрыть</button>
-    </section>
+    <?= $this->render('modals/_cancelTaskForm', ['task' => $task]) ?>
 <?php endif; ?>
 
 <div class="overlay"></div>
