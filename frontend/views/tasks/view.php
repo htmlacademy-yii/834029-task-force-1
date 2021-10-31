@@ -288,21 +288,36 @@ use yii\helpers\Html;
     </section>
 <?php endif; ?>
 
-<section class="modal form-modal refuse-form" id="refuse-form">
-    <h2>Отказ от задания</h2>
-    <p>
-        Вы собираетесь отказаться от выполнения задания.
-        Это действие приведёт к снижению вашего рейтинга.
-        Вы уверены?
-    </p>
-    <button class="button__form-modal button" id="close-modal"
-            type="button">Отмена
-    </button>
-    <button class="button__form-modal refuse-button button"
-            type="button">Отказаться
-    </button>
-    <button class="form-modal-close" type="button">Закрыть</button>
-</section>
+<?php if ($task->isWorker($user_id)) : ?>
+    <section class="modal form-modal refuse-form" id="refuse-form">
+        <h2>Отказ от задания</h2>
+        <p>
+            Вы собираетесь отказаться от выполнения задания.
+            Это действие приведёт к снижению вашего рейтинга.
+            Вы уверены?
+        </p>
+        <button class="button__form-modal button" id="close-modal"
+                type="button">Отмена
+        </button>
+        <?php $refuse_task_form = new \frontend\models\RefuseTaskForm(); ?>
+        <?php
+        $form = ActiveForm::begin([
+            'enableClientValidation' => false,
+            'action' => Url::to(['/tasks/refuse', 'id' => $task->id]),
+            'fieldConfig' => [
+                'template' => "{input}",
+            ],
+        ]); ?>
+            <?=$form->field($refuse_task_form, 'refuse')->hiddenInput()?>
+            <?= Html::button(
+                    'Отказаться',
+                    ['type' => 'submit', 'class' => 'button__form-modal refuse-button button']
+            ) ?>
+        <?php ActiveForm::end(); ?>
+        <button class="form-modal-close" type="button">Закрыть</button>
+    </section>
+<?php endif; ?>
+
 <section class="modal form-modal cancel-form" id="cancel-form">
     <h2>Отмена задания</h2>
     <p>

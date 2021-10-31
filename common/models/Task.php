@@ -141,4 +141,9 @@ class Task extends base\Task
 
         return false;
     }
+
+    public function isWorker(int $user_id): bool
+    {
+        return $this->worker_id === $user_id;
+    }
 }

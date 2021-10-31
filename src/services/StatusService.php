@@ -35,6 +35,12 @@ class StatusService
         $response->save();
     }
 
+    public function refuseTask(Task $task)
+    {
+        $task->status = \taskforce\models\Task::STATUS_FAILED;
+        $task->save();
+    }
+
     public function completeTask(Task $task, CompleteTaskForm $form): bool
     {
         $transaction = Task::getDb()->beginTransaction();

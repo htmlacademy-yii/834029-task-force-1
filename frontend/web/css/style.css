@@ -2497,8 +2497,12 @@ footer {
     text-transform: uppercase;
     color: rgba(57, 57, 57, 0.86);
     margin-bottom: 7px; }
-  .form-modal button {
+  .form-modal button, .form-modal a {
     float: right; }
+  .form-modal a:hover {
+    color: #ffffff;
+    text-decoration: none;
+  }
 
 .enter-form {
   display: none; }
