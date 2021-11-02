@@ -1,10 +1,15 @@
 <?php
 /* @var $this yii\web\View */
+/* @var $user_id int */
+/* @var $is_customer bool */
+/* @var $user_has_response bool */
 /* @var $task \common\models\Task */
+/* @var $actions \taskforce\models\actions\AbstractAction[] */
 
 use frontend\components\RatingWidget;
+use yii\helpers\Url;
+use yii\widgets\ActiveForm;
 use yii\helpers\Html;
-use common\models\User;
 
 ?>
 
@@ -23,7 +28,7 @@ use common\models\User;
                         <?=Yii::$app->formatter->asRelativeTime($task->created_at)?>
                     </span>
                 </div>
-                <?php if($task->price) : ?>
+                <?php if ($task->price) : ?>
                     <b class="new-task__price new-task__price--<?=$task->category->code?> content-view-price">
                         <?=$task->price?><b> ₽</b>
                     </b>
@@ -37,7 +42,7 @@ use common\models\User;
                 </p>
             </div>
 
-            <?php if(count($task->files) > 0) : ?>
+            <?php if (count($task->files) > 0) : ?>
                 <div class="content-view__attach">
                     <h3 class="content-view__h3">Вложения</h3>
                     <?php foreach($task->files as $file) : ?>
@@ -61,61 +66,82 @@ use common\models\User;
                 </div>
             </div>
         </div>
-        <div class="content-view__action-buttons">
-            <button class=" button button__big-color response-button open-modal"
-                    type="button" data-for="response-form">Откликнуться
-            </button>
-            <button class="button button__big-color refusal-button open-modal"
-                    type="button" data-for="refuse-form">Отказаться
-            </button>
-            <button class="button button__big-color request-button open-modal"
-                    type="button" data-for="complete-form">Завершить
-            </button>
-        </div>
+
+        <?php if (!empty($actions)) : ?>
+            <div class="content-view__action-buttons">
+                <?php foreach($actions as $action) : ?>
+                    <button class="button button__big-color <?=$action->getValue()?>-button open-modal"
+                            type="button" data-for="<?=$action->getValue()?>-form"><?=$action->getName()?>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
     </div>
 
-    <?php if(count($task->responses) > 0) : ?>
+    <?php if (count($task->responses) > 0 && ($is_customer || $user_has_response)) : ?>
         <div class="content-view__feedback">
-            <h2>Отклики <span>(<?=count($task->responses)?>)</span></h2>
+            <?php if ($is_customer) : ?>
+                <h2>
+                    Отклики <span>(<?=count($task->responses)?>)</span>
+                </h2>
+            <?php elseif ($user_has_response) : ?>
+                <h2>
+                    Ваш отклик
+                </h2>
+            <?php endif; ?>
+
             <div class="content-view__feedback-wrapper">
 
                 <?php foreach($task->responses as $response) : ?>
-                    <div class="content-view__feedback-card">
-                        <div class="feedback-card__top">
-                            <?= Html::a(
-                                Html::img(
-                                    $response->worker->avatar ?? Yii::$app->params['user_no_image'],
-                                    ['width' => 55, 'height' => 55]
-                                ),
-                                ['/users/view', 'id' => $response->worker->id]
-                            ) ?>
-                            <div class="feedback-card__top--name">
-                                <p>
-                                    <?=Html::a(
-                                        $response->worker->name,
-                                        ['/users/view', 'id' => $response->worker->id],
-                                        ['class' => 'link-regular']
-                                    )?>
-                                </p>
-                                <?= RatingWidget::widget(['rating' => $response->worker->workerRating]) ?>
+                    <?php if ($is_customer || $user_id === $response->worker_id) : ?>
+                        <div class="content-view__feedback-card">
+                            <div class="feedback-card__top">
+                                <?= Html::a(
+                                    Html::img(
+                                        $response->worker->avatar ?? Yii::$app->params['user_no_image'],
+                                        ['width' => 55, 'height' => 55]
+                                    ),
+                                    ['/users/view', 'id' => $response->worker->id]
+                                ) ?>
+                                <div class="feedback-card__top--name">
+                                    <p>
+                                        <?=Html::a(
+                                            $response->worker->name,
+                                            ['/users/view', 'id' => $response->worker->id],
+                                            ['class' => 'link-regular']
+                                        )?>
+                                    </p>
+                                    <?= RatingWidget::widget(['rating' => $response->worker->workerRating]) ?>
+                                </div>
+                                <span class="new-task__time">
+                                    <?=Yii::$app->formatter->asRelativeTime($response->created_at)?>
+                                </span>
                             </div>
-                            <span class="new-task__time">
-                                <?=Yii::$app->formatter->asRelativeTime($response->created_at)?>
-                            </span>
+                            <div class="feedback-card__content">
+                                <p>
+                                    <?=$response->comment?>
+                                </p>
+                                <span><?=$response->price?> ₽</span>
+                            </div>
+
+                            <?php if ($is_customer &&
+                                    $task->isNew() &&
+                                    $response->isNew()) : ?>
+                                <div class="feedback-card__actions">
+                                    <?= Html::a(
+                                        'Подтвердить',
+                                        ['/response/accept', 'id' => $response->id],
+                                        ['class' => 'button__small-color response-button button', 'type' => 'button']
+                                    ) ?>
+                                    <?= Html::a(
+                                        'Отказать',
+                                        ['/response/refuse', 'id' => $response->id],
+                                        ['class' => 'button__small-color refuse-button button', 'type' => 'button']
+                                    ) ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
-                        <div class="feedback-card__content">
-                            <p>
-                                <?=$response->comment?>
-                            </p>
-                            <span><?=$response->price?> ₽</span>
-                        </div>
-                        <div class="feedback-card__actions">
-                            <a class="button__small-color response-button button"
-                               type="button">Подтвердить</a>
-                            <a class="button__small-color refusal-button button"
-                               type="button">Отказать</a>
-                        </div>
-                    </div>
+                    <?php endif; ?>
                 <?php endforeach; ?>
 
             </div>
@@ -133,7 +159,7 @@ use common\models\User;
                     $task->customer->avatar ?? Yii::$app->params['user_no_image'],
                     ['width' => 62, 'height' => 62]
                 );
-                echo ($task->customer->role === User::WORKER_ROLE) ?
+                echo ($task->customer->isWorker()) ?
                     Html::a(
                         $avatar,
                         ['/users/view', 'id' => $task->customer->id]
@@ -157,7 +183,7 @@ use common\models\User;
                 </span>
             </p>
 
-            <?php if($task->customer->role === User::WORKER_ROLE) : ?>
+            <?php if ($task->customer->isWorker()) : ?>
                 <?= Html::a(
                     'Смотреть профиль',
                     ['/users/view', 'id' => $task->customer->id],
@@ -172,67 +198,20 @@ use common\models\User;
     </div>
 </section>
 
-<section class="modal response-form form-modal" id="response-form">
-    <h2>Отклик на задание</h2>
-    <form action="#" method="post">
-        <p>
-            <label class="form-modal-description" for="response-payment">Ваша цена</label>
-            <input class="response-form-payment input input-middle input-money" type="text" name="response-payment"
-                   id="response-payment">
-        </p>
-        <p>
-            <label class="form-modal-description" for="response-comment">Комментарий</label>
-            <textarea class="input textarea" rows="4" id="response-comment" name="response-comment"
-                      placeholder="Place your text"></textarea>
-        </p>
-        <button class="button modal-button" type="submit">Отправить</button>
-    </form>
-    <button class="form-modal-close" type="button">Закрыть</button>
-</section>
-<section class="modal completion-form form-modal" id="complete-form">
-    <h2>Завершение задания</h2>
-    <p class="form-modal-description">Задание выполнено?</p>
-    <form action="#" method="post">
-        <input class="visually-hidden completion-input completion-input--yes" type="radio" id="completion-radio--yes"
-               name="completion" value="yes">
-        <label class="completion-label completion-label--yes" for="completion-radio--yes">Да</label>
-        <input class="visually-hidden completion-input completion-input--difficult" type="radio"
-               id="completion-radio--yet" name="completion" value="difficulties">
-        <label class="completion-label completion-label--difficult" for="completion-radio--yet">Возникли проблемы</label>
-        <p>
-            <label class="form-modal-description" for="completion-comment">Комментарий</label>
-            <textarea class="input textarea" rows="4" id="completion-comment" name="completion-comment"
-                      placeholder="Place your text"></textarea>
-        </p>
-        <p class="form-modal-description">
-            Оценка
-        <div class="feedback-card__top--name completion-form-star">
-            <span class="star-disabled"></span>
-            <span class="star-disabled"></span>
-            <span class="star-disabled"></span>
-            <span class="star-disabled"></span>
-            <span class="star-disabled"></span>
-        </div>
-        </p>
-        <input type="hidden" name="rating" id="rating">
-        <button class="button modal-button" type="submit">Отправить</button>
-    </form>
-    <button class="form-modal-close" type="button">Закрыть</button>
-</section>
-<section class="modal form-modal refusal-form" id="refuse-form">
-    <h2>Отказ от задания</h2>
-    <p>
-        Вы собираетесь отказаться от выполнения задания.
-        Это действие приведёт к снижению вашего рейтинга.
-        Вы уверены?
-    </p>
-    <button class="button__form-modal button" id="close-modal"
-            type="button">Отмена
-    </button>
-    <button class="button__form-modal refusal-button button"
-            type="button">Отказаться
-    </button>
-    <button class="form-modal-close" type="button">Закрыть</button>
-</section>
+<?php if (!$is_customer && $task->isNew()) : ?>
+    <?= $this->render('modals/_addResponseForm', ['task' => $task]) ?>
+<?php endif; ?>
+
+<?php if ($is_customer && $task->inWork()) : ?>
+    <?= $this->render('modals/_completeTaskForm', ['task' => $task]) ?>
+<?php endif; ?>
+
+<?php if ($task->isWorker($user_id)) : ?>
+    <?= $this->render('modals/_refuseTaskForm', ['task' => $task]) ?>
+<?php endif; ?>
+
+<?php if ($is_customer && $task->isNew()) : ?>
+    <?= $this->render('modals/_cancelTaskForm', ['task' => $task]) ?>
+<?php endif; ?>
 
 <div class="overlay"></div>

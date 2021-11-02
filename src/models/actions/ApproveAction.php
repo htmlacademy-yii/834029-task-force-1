@@ -10,7 +10,7 @@ class ApproveAction extends AbstractAction
 {
     public function getValue() :string
     {
-        return 'approve';
+        return 'complete';
     }
 
     public function getName() :string

@@ -6,6 +6,33 @@ use common\models\base\File;
 use yii\behaviors\TimestampBehavior;
 use yii\db\Expression;
 
+/**
+ * This is the model class for table "task".
+ *
+ * @property int $id
+ * @property string $title
+ * @property string $description
+ * @property int|null $price
+ * @property int $category_id
+ * @property string $created_at
+ * @property string|null $finish_at
+ * @property string $status
+ * @property float|null $latitude
+ * @property float|null $longitude
+ * @property int|null $city_id
+ * @property int $customer_id
+ * @property int|null $worker_id
+ * @property string|null $attach_id
+ *
+ * @property Message[] $messages
+ * @property Response[] $responses
+ * @property Review[] $reviews
+ * @property File $attach
+ * @property Category $category
+ * @property City $city
+ * @property User $customer
+ * @property User $worker
+ */
 class Task extends base\Task
 {
     public const SHORT_DESCRIPTION_LENGTH = 50;
@@ -80,12 +107,12 @@ class Task extends base\Task
         return $this->hasOne(User::class, ['id' => 'customer_id']);
     }
 
-    public function getFiles() : \yii\db\ActiveQuery
+    public function getFiles(): \yii\db\ActiveQuery
     {
         return $this->hasMany(File::class, ['attach_id' => 'attach_id']);
     }
 
-    public function getShortDescription() : string
+    public function getShortDescription(): string
     {
         if (strlen($this->description) > self::SHORT_DESCRIPTION_LENGTH) {
             $description = substr($this->description, 0, self::SHORT_DESCRIPTION_LENGTH);
@@ -96,5 +123,27 @@ class Task extends base\Task
         }
     }
 
+    public function isNew(): bool
+    {
+        return $this->status === \taskforce\models\Task::STATUS_NEW;
+    }
 
+    public function inWork(): bool
+    {
+        return $this->status === \taskforce\models\Task::STATUS_IN_WORK;
+    }
+
+    public function canUserChangeStatus(int $customer_id): bool
+    {
+        if($this->customer_id === $customer_id) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function isWorker(int $user_id): bool
+    {
+        return $this->worker_id === $user_id;
+    }
 }

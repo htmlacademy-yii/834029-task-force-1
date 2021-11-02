@@ -13,6 +13,7 @@ use Yii;
  * @property string $comment
  * @property int $price
  * @property string $created_at
+ * @property string|null $status
  *
  * @property Task $task
  * @property User $worker
@@ -35,7 +36,7 @@ class Response extends \yii\db\ActiveRecord
         return [
             [['task_id', 'worker_id', 'comment', 'price'], 'required'],
             [['task_id', 'worker_id', 'price'], 'integer'],
-            [['comment'], 'string'],
+            [['comment', 'status'], 'string'],
             [['created_at'], 'safe'],
             [['task_id'], 'exist', 'skipOnError' => true, 'targetClass' => Task::className(), 'targetAttribute' => ['task_id' => 'id']],
             [['worker_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['worker_id' => 'id']],
@@ -54,6 +55,7 @@ class Response extends \yii\db\ActiveRecord
             'comment' => 'Comment',
             'price' => 'Price',
             'created_at' => 'Created At',
+            'status' => 'Status',
         ];
     }
 

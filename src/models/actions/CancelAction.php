@@ -16,7 +16,7 @@ class CancelAction extends AbstractAction
 
     public function getName() :string
     {
-        return 'Завершить';
+        return 'Отменить';
     }
 
     public function checkPermission(int $worker_id, int $customer_id, int $user_id): bool

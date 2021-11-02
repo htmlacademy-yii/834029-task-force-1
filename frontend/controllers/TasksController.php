@@ -6,22 +6,34 @@ use common\models\Category;
 use common\models\File;
 use common\models\Task;
 use common\models\User;
+use frontend\models\CompleteTaskForm;
 use frontend\models\CreateTaskForm;
+use frontend\models\RefuseTaskForm;
 use frontend\models\TaskFilterForm;
+use taskforce\models\actions\RespondAction;
+use taskforce\services\StatusService;
 use Yii;
 use yii\bootstrap\ActiveForm;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
 use yii\helpers\ArrayHelper;
 use yii\helpers\FileHelper;
+use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\UploadedFile;
 
 class TasksController extends BaseController
 {
     public $enableCsrfValidation = false;
+    protected StatusService $statusService;
 
-    public function behaviors() : array
+    public function __construct($id, $module, StatusService $statusService, $config = [])
+    {
+        $this->statusService = $statusService;
+        parent::__construct($id, $module, $config);
+    }
+
+    public function behaviors(): array
     {
         $rules = parent::behaviors();
         $rule = [
@@ -37,7 +49,7 @@ class TasksController extends BaseController
         return $rules;
     }
 
-    public function actionIndex()
+    public function actionIndex(): string
     {
         $categories = ArrayHelper::map(Category::find()->all(), 'id', 'title');
         $filter = new TaskFilterForm();
@@ -59,18 +71,42 @@ class TasksController extends BaseController
         ]);
     }
 
-    public function actionView($id)
+    public function actionView($id): string
     {
+        $user_id = Yii::$app->user->identity->getId();
         $task = Task::findOne($id);
-
         if (!$task) {
             throw new NotFoundHttpException('Страница не найдена');
         }
 
-        return $this->render('view', compact('task'));
+        $is_customer = $user_id === $task->customer_id;
+        $task_with_status = new \taskforce\models\Task(
+            $task->customer_id,
+            $task->worker_id ?? 0,
+            $task->status
+        );
+        $actions = $task_with_status->getAvailableActions($user_id);
+        $user_has_response = false;
+
+        if ($task->isNew()) {
+            foreach($task->responses as $response) {
+                if ($response->worker_id === $user_id) {
+                    $user_has_response = true;
+                    unset($actions[(new RespondAction())->getValue()]);
+                }
+            }
+        }
+
+        return $this->render('view', compact(
+            'actions',
+            'task',
+            'user_id',
+            'is_customer',
+            'user_has_response'
+        ));
     }
 
-    public function actionCreate()
+    public function actionCreate(): string
     {
         $model = new CreateTaskForm();
         $categories = Category::find()->select(['title'])->indexBy('id')->column();
@@ -92,7 +128,7 @@ class TasksController extends BaseController
         return $this->render('create', compact('model', 'categories'));
     }
 
-    public function actionLoadFiles() : bool
+    public function actionLoadFiles(): bool
     {
         if (Yii::$app->request->isAjax) {
             $files = UploadedFile::getInstancesByName('files');
@@ -102,5 +138,65 @@ class TasksController extends BaseController
         }
 
         return false;
+    }
+
+    public function actionComplete(int $task_id): \yii\web\Response
+    {
+        $task = Task::findOne($task_id);
+        if (!$task) {
+            throw new NotFoundHttpException('Задание не найдено');
+        }
+
+        if (!$task->canUserChangeStatus(Yii::$app->user->identity->getId())) {
+            throw new ForbiddenHttpException('Невозможно выполнить действие');
+        }
+
+        $model = new CompleteTaskForm();
+        $model->load(Yii::$app->request->post());
+
+        if ($model->validate() && $this->statusService->completeTask($task, $model)) {
+            return $this->redirect(['/tasks/view', 'id' => $task_id]);
+        }
+
+        throw new ForbiddenHttpException('Ошибка при завершении задания');
+    }
+
+    public function actionRefuse(int $id): \yii\web\Response
+    {
+        $task = Task::findOne($id);
+        $user_id = Yii::$app->user->identity->getId();
+        if (!$task) {
+            throw new NotFoundHttpException('Задание не найдено');
+        }
+
+        if (!$task->inWork() || $task->worker_id !== $user_id) {
+            throw new ForbiddenHttpException('Невозможно выполнить действие');
+        }
+
+        $model = new RefuseTaskForm();
+        $model->load(Yii::$app->request->post());
+
+        if ($model->validate() && $model->refuse) {
+            $this->statusService->refuseTask($task);
+            return $this->redirect(['/tasks/view', 'id' => $id]);
+        }
+
+        throw new ForbiddenHttpException('Ошибка при отказе от задания');
+    }
+
+    public function actionCancel(int $id): \yii\web\Response
+    {
+        $task = Task::findOne($id);
+        $user_id = Yii::$app->user->identity->getId();
+        if (!$task) {
+            throw new NotFoundHttpException('Задание не найдено');
+        }
+
+        if (!$task->isNew() || $task->customer_id !== $user_id) {
+            throw new ForbiddenHttpException('Невозможно выполнить действие');
+        }
+
+        $this->statusService->cancelTask($task);
+        return $this->redirect(['/tasks/view', 'id' => $id]);
     }
 }
