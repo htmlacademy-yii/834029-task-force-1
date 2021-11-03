@@ -5,6 +5,7 @@
 /* @var $user_has_response bool */
 /* @var $task \common\models\Task */
 /* @var $actions \taskforce\models\actions\AbstractAction[] */
+/* @var $location_info \taskforce\models\dto\LocationInfoDto|null */
 
 use frontend\components\RatingWidget;
 use yii\helpers\Url;
@@ -51,20 +52,21 @@ use yii\helpers\Html;
                 </div>
             <?php endif; ?>
 
-            <div class="content-view__location">
-                <h3 class="content-view__h3">Расположение</h3>
-                <div class="content-view__location-wrapper">
-                    <div class="content-view__map">
-                        <a href="#"><img src="/img/map.jpg" width="361" height="292"
-                                         alt="Москва, Новый арбат, 23 к. 1"></a>
-                    </div>
-                    <div class="content-view__address">
-                        <span class="address__town">Москва</span><br>
-                        <span>Новый арбат, 23 к. 1</span>
-                        <p>Вход под арку, код домофона 1122</p>
+            <?php if ($task->city_id) : ?>
+                <div class="content-view__location">
+                    <h3 class="content-view__h3">Расположение</h3>
+                    <div class="content-view__location-wrapper">
+                        <div class="content-view__map">
+                            <div id="map" style="width: 361px; height: 292px"></div>
+                        </div>
+                        <div class="content-view__address">
+                            <span class="address__town"><?=$task->city->name?></span><br>
+                            <span><?=$location_info->name?></span>
+                            <p><?=$location_info->description?></p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            <?php endif; ?>
         </div>
 
         <?php if (!empty($actions)) : ?>
@@ -215,3 +217,15 @@ use yii\helpers\Html;
 <?php endif; ?>
 
 <div class="overlay"></div>
+
+<script src="https://api-maps.yandex.ru/2.1/?apikey=e666f398-c983-4bde-8f14-e3fec900592a&lang=ru_RU" type="text/javascript">
+</script>
+<script>
+    ymaps.ready(init);
+    function init(){
+        let myMap = new ymaps.Map("map", {
+            center: [<?=$task->latitude?>, <?=$task->longitude?>],
+            zoom: 14
+        });
+    }
+</script>

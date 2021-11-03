@@ -11,8 +11,11 @@ use frontend\models\CreateTaskForm;
 use frontend\models\RefuseTaskForm;
 use frontend\models\TaskFilterForm;
 use taskforce\models\actions\RespondAction;
+use taskforce\models\exceptions\UnsupportedCityException;
+use taskforce\services\GeoCoderService;
 use taskforce\services\StatusService;
 use Yii;
+use yii\base\Module;
 use yii\bootstrap\ActiveForm;
 use yii\filters\AccessControl;
 use yii\filters\VerbFilter;
@@ -25,11 +28,18 @@ use yii\web\UploadedFile;
 class TasksController extends BaseController
 {
     public $enableCsrfValidation = false;
-    protected StatusService $statusService;
+    private StatusService $statusService;
+    private GeoCoderService $geocoderService;
 
-    public function __construct($id, $module, StatusService $statusService, $config = [])
+    public function __construct(
+        string $id,
+        Module $module,
+        StatusService $statusService,
+        GeoCoderService $geocoderService,
+        array $config = [])
     {
         $this->statusService = $statusService;
+        $this->geocoderService = $geocoderService;
         parent::__construct($id, $module, $config);
     }
 
@@ -71,7 +81,7 @@ class TasksController extends BaseController
         ]);
     }
 
-    public function actionView($id): string
+    public function actionView(int $id): string
     {
         $user_id = Yii::$app->user->identity->getId();
         $task = Task::findOne($id);
@@ -97,16 +107,25 @@ class TasksController extends BaseController
             }
         }
 
+        $location_info = null;
+        if ($task->city_id) {
+            $location_info = $this->geocoderService->getLocationByCoordinates($task->latitude, $task->longitude);
+        }
+
         return $this->render('view', compact(
             'actions',
             'task',
             'user_id',
             'is_customer',
-            'user_has_response'
+            'user_has_response',
+            'location_info'
         ));
     }
 
-    public function actionCreate(): string
+    /**
+     * @return string|\yii\web\Response
+     */
+    public function actionCreate()
     {
         $model = new CreateTaskForm();
         $categories = Category::find()->select(['title'])->indexBy('id')->column();
@@ -117,9 +136,17 @@ class TasksController extends BaseController
             $customer_id = Yii::$app->user->identity->getId();
             $attach_id = Yii::$app->session->get('attach_id');
 
-            if ($model->validate() && $task = $model->createTask($customer_id, $attach_id)) {
+            try {
+                $location = $this->geocoderService->getLocationByAddress($model->location);
+            } catch (UnsupportedCityException $e) {
+                $model->addError('location', 'К сожалению, нельзя создать задание для данного города');
+                Yii::$app->session->set('attach_id', uniqid());
+                return $this->render('create', compact('model', 'categories'));
+            }
+
+            if ($model->validate() && $task = $model->createTask($customer_id, $location, $attach_id)) {
                 Yii::$app->session->remove('attach_id');
-                $this->redirect(['view', 'id' => $task->id]);
+                return $this->redirect(['view', 'id' => $task->id]);
             }
         }
 

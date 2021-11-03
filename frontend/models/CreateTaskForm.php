@@ -6,7 +6,9 @@ namespace frontend\models;
 
 use common\models\Category;
 use common\models\City;
+use common\models\File;
 use common\models\Task;
+use taskforce\models\dto\LocationDto;
 use yii\base\Model;
 
 class CreateTaskForm extends Model
@@ -16,7 +18,7 @@ class CreateTaskForm extends Model
     public $price;
     public $category_id;
     public $finish_at;
-    public $city_id;
+    public $location;
     public $attach_id;
 
     public function attributeLabels(): array
@@ -27,7 +29,7 @@ class CreateTaskForm extends Model
             'price' => 'Бюджет',
             'category_id' => 'Категория',
             'finish_at' => 'Сроки исполнения',
-            'city_id' => 'Локация',
+            'location' => 'Локация',
             'attach_id' => 'Файлы',
         ];
     }
@@ -36,17 +38,16 @@ class CreateTaskForm extends Model
     {
         return [
             [['title', 'description', 'category_id'], 'required'],
-            [['title', 'description'], 'string'],
+            [['title', 'description', 'location'], 'string'],
             [['title'], 'string', 'min' => 10],
             [['description'], 'string', 'min' => 30],
-            [['price', 'category_id', 'city_id'], 'integer'],
+            [['price', 'category_id'], 'integer'],
             [['price'], 'compare', 'compareValue' => 0, 'operator' => '>'],
             [['category_id'], 'exist', 'skipOnError' => true, 'targetClass' => Category::class, 'targetAttribute' => ['category_id' => 'id']],
-            [['city_id'], 'exist', 'skipOnError' => true, 'targetClass' => City::class, 'targetAttribute' => ['city_id' => 'id']],
         ];
     }
 
-    public function createTask($customer_id, $attach_id = null) : ?Task
+    public function createTask(int $customer_id, ?LocationDto $location, ?string $attach_id = null) : ?Task
     {
         $task = new Task();
         $task->title = $this->title;
@@ -57,9 +58,17 @@ class CreateTaskForm extends Model
         $task->finish_at = $this->finish_at;
         $task->status = \taskforce\models\Task::STATUS_NEW;
         $task->customer_id = $customer_id;
-        $task->attach_id = $attach_id;
 
-        // TODO city_id, longitude, latitude
+        $isset_files = File::find()->where(['attach_id' => $attach_id])->count();
+        if ($isset_files) {
+            $task->attach_id = $attach_id;
+        }
+
+        if ($location) {
+            $task->latitude = $location->latitude;
+            $task->longitude = $location->longitude;
+            $task->city_id = $location->city_id;
+        }
 
         if ($task->validate() && $task->save()) {
             return $task;
