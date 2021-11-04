@@ -11,9 +11,17 @@ return [
     'basePath' => dirname(__DIR__),
     'bootstrap' => ['log'],
     'controllerNamespace' => 'frontend\controllers',
+    'modules' => [
+        'api' => [
+            'class' => 'frontend\modules\api\Module'
+        ]
+    ],
     'components' => [
         'request' => [
             'csrfParam' => '_csrf-frontend',
+            'parsers' => [
+                '*' => 'yii\web\JsonParser',
+            ]
         ],
         'user' => [
             'identityClass' => 'common\models\User',
@@ -43,7 +51,8 @@ return [
             'rules' => [
                 'user/view/<id:\d+>' => 'users/view',
                 'task/view/<id:\d+>' => 'tasks/view',
-                'logout' => 'site/logout'
+                'logout' => 'site/logout',
+                ['class' => 'yii\rest\UrlRule', 'controller' => 'api/messages']
             ],
         ],
     ],

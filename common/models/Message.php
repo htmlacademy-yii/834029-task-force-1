@@ -2,7 +2,8 @@
 
 namespace common\models;
 
-use Yii;
+use yii\behaviors\TimestampBehavior;
+use yii\db\Expression;
 
 class Message extends base\Message
 {
