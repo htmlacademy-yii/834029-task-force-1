@@ -6,18 +6,24 @@ use common\models\Response;
 use common\models\Task;
 use common\models\User;
 use frontend\models\AddResponseForm;
+use taskforce\models\exceptions\InternalServerException;
 use taskforce\services\StatusService;
 use Yii;
+use yii\base\Module;
 use yii\filters\VerbFilter;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 
 class ResponseController extends BaseController
 {
-    protected StatusService $statusService;
+    private StatusService $statusService;
 
-    public function __construct($id, $module, StatusService $statusService, $config = [])
-    {
+    public function __construct(
+        string $id,
+        Module $module,
+        StatusService $statusService,
+        array $config = []
+    ) {
         $this->statusService = $statusService;
         parent::__construct($id, $module, $config);
     }
@@ -56,7 +62,7 @@ class ResponseController extends BaseController
             return $this->redirect(['/tasks/view', 'id' => $response->task_id]);
         }
 
-        throw new ForbiddenHttpException('Невозможно выполнить действие');
+        throw new InternalServerException('Невозможно выполнить действие');
     }
 
     public function actionRefuse($id): \yii\web\Response
