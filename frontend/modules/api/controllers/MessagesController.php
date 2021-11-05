@@ -4,32 +4,20 @@ namespace frontend\modules\api\controllers;
 
 use frontend\modules\api\models\Message;
 use Yii;
-use yii\filters\AccessControl;
-use yii\rest\ActiveController;
 use yii\web\ServerErrorHttpException;
 
-class MessagesController extends ActiveController
+class MessagesController extends BaseActiveController
 {
     public $modelClass = Message::class;
 
-    public function behaviors(): array
-    {
-        $rules = parent::behaviors();
-        $rules['access'] = [
-            'class' => AccessControl::class,
-            'rules' => [
-                [
-                    'allow' => true,
-                    'roles' => ['@']
-                ]
-            ]
-        ];
-        return $rules;
-    }
-
     public function actions() {
         $actions = parent::actions();
-        unset($actions['view'], $actions['create'], $actions['update'], $actions['delete']);
+        unset(
+            $actions['view'],
+            $actions['create'],
+            $actions['update'],
+            $actions['delete']
+        );
         return $actions;
     }
 
@@ -47,7 +35,7 @@ class MessagesController extends ActiveController
         if ($model->save()) {
             Yii::$app->getResponse()->setStatusCode(201);
         } elseif (!$model->hasErrors()) {
-            throw new ServerErrorHttpException('Failed to create the object for unknown reason.');
+            throw new ServerErrorHttpException('Не удалось создать сообщение');
         }
 
         return $model;

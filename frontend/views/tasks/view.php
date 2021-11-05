@@ -195,7 +195,6 @@ use yii\helpers\Html;
         </div>
     </div>
     <div id="chat-container">
-        <!--                    добавьте сюда атрибут task с указанием в нем id текущего задания-->
         <chat class="connect-desk__chat" task="<?=$task->id?>"></chat>
     </div>
 </section>
