@@ -2,8 +2,9 @@
 
 namespace frontend\modules\api\controllers;
 
-use frontend\modules\api\models\Message;
+use common\models\Message;
 use Yii;
+use yii\helpers\ArrayHelper;
 use yii\web\ServerErrorHttpException;
 
 class MessagesController extends BaseActiveController
@@ -13,6 +14,7 @@ class MessagesController extends BaseActiveController
     public function actions() {
         $actions = parent::actions();
         unset(
+            $actions['index'],
             $actions['view'],
             $actions['create'],
             $actions['update'],
@@ -21,23 +23,57 @@ class MessagesController extends BaseActiveController
         return $actions;
     }
 
-    public function actionCreate(): Message
+    public function actionIndex(int $task_id): array
     {
-        $model = new Message();
-        $model->scenario = $model::SCENARIO_CREATE;
+        $messages = Message::find()->where([
+            'task_id' => $task_id
+        ])->orderBy('created_at')->all();
+
+        if (!empty($messages)) {
+            foreach ($messages as $message) {
+                /** @var $message \common\models\Message */
+                if ($message->user_id !== Yii::$app->user->identity->getId()) {
+                    $message->is_read = true;
+                    $message->save();
+                }
+            }
+        }
+
+        return ArrayHelper::toArray($messages, [
+            'common\models\Message' => [
+                'message' => 'text',
+                'published_at' => 'created_at',
+                'is_mine' => function ($model) {
+                    return Yii::$app->user->identity->getId() === $model->user_id;
+                },
+            ],
+        ]);
+    }
+
+    public function actionCreate(): array
+    {
+        $message = new Message();
         $requestParams = Yii::$app->request->post();
 
-        $model->task_id = $requestParams['task_id'];
-        $model->text = $requestParams['message'];
-        $model->user_id = Yii::$app->user->identity->getId();
-        $model->created_at = date('Y-m-d H:i:s');
+        $message->task_id = $requestParams['task_id'];
+        $message->text = $requestParams['message'];
+        $message->user_id = Yii::$app->user->identity->getId();
+        $message->created_at = date('Y-m-d H:i:s');
+        $message->is_read = false;
 
-        if ($model->save()) {
+        if ($message->save()) {
             Yii::$app->getResponse()->setStatusCode(201);
-        } elseif (!$model->hasErrors()) {
+        } elseif (!$message->hasErrors()) {
             throw new ServerErrorHttpException('Не удалось создать сообщение');
         }
 
-        return $model;
+        return ArrayHelper::toArray($message, [
+            'common\models\Message' => [
+                'id',
+                'message' => 'text',
+                'published_at' => 'created_at',
+                'is_mine' => true,
+            ],
+        ]);
     }
 }
