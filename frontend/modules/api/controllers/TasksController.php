@@ -34,13 +34,7 @@ class TasksController extends BaseActiveController
                 'title',
                 'published_at' => 'created_at',
                 'new_messages' => function ($task) {
-                    $count = 0;
-                    foreach ($task->messages as $message) {
-                        if ($message->is_read === 0 && $message->user_id !== Yii::$app->user->identity->getId()) {
-                            $count++;
-                        }
-                    }
-                    return $count;
+                    return $task->getNewMessages(Yii::$app->user->identity->getId())->count();
                 },
                 'author_name' => 'customer.name',
                 'id'

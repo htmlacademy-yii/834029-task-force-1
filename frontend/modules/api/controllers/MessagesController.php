@@ -3,8 +3,10 @@
 namespace frontend\modules\api\controllers;
 
 use common\models\Message;
+use common\models\Task;
 use Yii;
 use yii\helpers\ArrayHelper;
+use yii\web\NotFoundHttpException;
 use yii\web\ServerErrorHttpException;
 
 class MessagesController extends BaseActiveController
@@ -32,7 +34,7 @@ class MessagesController extends BaseActiveController
         if (!empty($messages)) {
             foreach ($messages as $message) {
                 /** @var $message \common\models\Message */
-                if ($message->user_id !== Yii::$app->user->identity->getId()) {
+                if (!$message->is_read && $message->user_id !== Yii::$app->user->identity->getId()) {
                     $message->is_read = true;
                     $message->save();
                 }
@@ -54,6 +56,11 @@ class MessagesController extends BaseActiveController
     {
         $message = new Message();
         $requestParams = Yii::$app->request->post();
+
+        $task = Task::findOne($requestParams['task_id']);
+        if (!$task) {
+            throw new NotFoundHttpException("Задание с id {$requestParams['task_id']} не найдено");
+        }
 
         $message->task_id = $requestParams['task_id'];
         $message->text = $requestParams['message'];

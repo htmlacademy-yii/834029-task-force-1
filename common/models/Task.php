@@ -146,4 +146,14 @@ class Task extends base\Task
     {
         return $this->worker_id === $user_id;
     }
+
+    public function getNewMessages(int $user_id): \yii\db\ActiveQuery
+    {
+        return Message::find()->where([
+            'task_id' => $this->id,
+            'is_read' => 0,
+        ])->andWhere([
+            '<>', 'user_id', $user_id
+        ]);
+    }
 }
