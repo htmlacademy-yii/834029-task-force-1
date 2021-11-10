@@ -1761,6 +1761,7 @@ footer {
     margin-top: 0; }
 
 .my-list__wrapper {
+  box-sizing: content-box;
   width: 690px;
   padding-left: 30px;
   padding-right: 30px;
@@ -1778,11 +1779,14 @@ footer {
       align-self: center;
   color: #ffffff; }
 
-.done-status {
+.completed-status, .in_work-status {
   background-color: #00b894; }
 
 .new-status {
   background-color: #ff7f50; }
+
+.canceled-status, .failed-status {
+  background-color: #ff505f; }
 
 .my-list__bottom {
   display: -webkit-box;
@@ -1809,6 +1813,7 @@ footer {
   margin-right: 50px; }
 
 .my-list__bottom-chat--new::before {
+  box-sizing: content-box;
   position: absolute;
   content: "";
   width: 14px;

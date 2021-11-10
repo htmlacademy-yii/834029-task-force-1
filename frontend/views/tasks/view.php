@@ -11,7 +11,7 @@ use frontend\components\RatingWidget;
 use yii\helpers\Html;
 
 \frontend\assets\YandexMapAsset::register($this);
-\frontend\assets\MessangerAsset::register($this)
+\frontend\assets\MessangerAsset::register($this);
 ?>
 
 <section class="content-view">
