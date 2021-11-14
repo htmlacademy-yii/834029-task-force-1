@@ -8,10 +8,10 @@
 /* @var $location_info \taskforce\models\dto\LocationInfoDto|null */
 
 use frontend\components\RatingWidget;
-use yii\helpers\Url;
-use yii\widgets\ActiveForm;
 use yii\helpers\Html;
 
+\frontend\assets\YandexMapAsset::register($this);
+\frontend\assets\MessangerAsset::register($this)
 ?>
 
 <section class="content-view">
@@ -195,8 +195,7 @@ use yii\helpers\Html;
         </div>
     </div>
     <div id="chat-container">
-        <!--                    добавьте сюда атрибут task с указанием в нем id текущего задания-->
-        <chat class="connect-desk__chat"></chat>
+        <chat class="connect-desk__chat" task="<?=$task->id?>"></chat>
     </div>
 </section>
 
@@ -218,8 +217,6 @@ use yii\helpers\Html;
 
 <div class="overlay"></div>
 
-<script src="https://api-maps.yandex.ru/2.1/?apikey=e666f398-c983-4bde-8f14-e3fec900592a&lang=ru_RU" type="text/javascript">
-</script>
 <script>
     ymaps.ready(init);
     function init(){

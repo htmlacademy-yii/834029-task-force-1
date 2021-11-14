@@ -2,8 +2,6 @@
 
 namespace common\models\base;
 
-use Yii;
-
 /**
  * This is the model class for table "message".
  *
@@ -12,6 +10,7 @@ use Yii;
  * @property int $user_id
  * @property string $text
  * @property string $created_at
+ * @property bool $is_read
  *
  * @property Task $task
  * @property User $user
@@ -35,6 +34,7 @@ class Message extends \yii\db\ActiveRecord
             [['task_id', 'user_id', 'text'], 'required'],
             [['task_id', 'user_id'], 'integer'],
             [['text'], 'string'],
+            [['is_read'], 'boolean'],
             [['created_at'], 'safe'],
             [['task_id'], 'exist', 'skipOnError' => true, 'targetClass' => Task::className(), 'targetAttribute' => ['task_id' => 'id']],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
@@ -52,6 +52,7 @@ class Message extends \yii\db\ActiveRecord
             'user_id' => 'User ID',
             'text' => 'Text',
             'created_at' => 'Created At',
+            'is_read' => 'Is read',
         ];
     }
 
