@@ -12,6 +12,8 @@ use yii\helpers\Html;
 
 \frontend\assets\YandexMapAsset::register($this);
 \frontend\assets\MessangerAsset::register($this);
+
+$this->title = $task->title;
 ?>
 
 <section class="content-view">

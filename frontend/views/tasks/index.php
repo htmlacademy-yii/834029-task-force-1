@@ -6,6 +6,8 @@
 /* @var $filter_data array */
 
 use yii\helpers\Html;
+
+$this->title = 'Новые задания';
 ?>
 
 <section class="new-task">

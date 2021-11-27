@@ -8,6 +8,8 @@ use frontend\components\RatingWidget;
 use yii\helpers\Html;
 use yii\helpers\Url;
 
+$this->title = 'Мои задания';
+
 $current = Yii::$app->controller->action->id;
 $current_class = 'menu_toggle__item--current';
 ?>

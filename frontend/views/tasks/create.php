@@ -8,6 +8,8 @@ use frontend\assets\DropzoneTaskCreateAsset;
 /* @var $categories array */
 
 DropzoneTaskCreateAsset::register($this);
+
+$this->title = 'Публикация нового задания';
 ?>
 
 <section class="create__task">

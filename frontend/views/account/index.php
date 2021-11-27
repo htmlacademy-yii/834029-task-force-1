@@ -4,6 +4,7 @@ use frontend\assets\DropzoneAccountAsset;
 
 DropzoneAccountAsset::register($this);
 
+$this->title = 'Настройки аккаунта';
 ?>
 <section class="account__redaction-wrapper">
     <h1>Редактирование настроек профиля</h1>

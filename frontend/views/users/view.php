@@ -6,6 +6,7 @@ use frontend\components\RatingWidget;
 use yii\helpers\Html;
 use common\models\User;
 
+$this->title = $user->name;
 ?>
 
 <section class="content-view">

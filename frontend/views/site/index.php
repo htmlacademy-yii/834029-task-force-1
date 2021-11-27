@@ -6,7 +6,7 @@ use yii\helpers\Html;
 /* @var $login_form \frontend\models\SigninForm */
 /* @var $tasks array */
 
-
+$this->title = 'Taskforce';
 ?>
 <main>
     <div class="landing-container">
