@@ -194,9 +194,11 @@ use yii\helpers\Html;
             <?php endif; ?>
         </div>
     </div>
-    <div id="chat-container">
-        <chat class="connect-desk__chat" task="<?=$task->id?>"></chat>
-    </div>
+    <?php if ($task->inWork() && ($task->isWorker($user_id) || $task->isCustomer($user_id))) : ?>
+        <div id="chat-container">
+            <chat class="connect-desk__chat" task="<?=$task->id?>"></chat>
+        </div>
+    <?php endif; ?>
 </section>
 
 <?php if (!$is_customer && $task->isNew()) : ?>

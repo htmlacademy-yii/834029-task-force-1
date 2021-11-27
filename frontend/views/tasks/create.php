@@ -2,12 +2,12 @@
 
 use yii\bootstrap\ActiveForm;
 use yii\helpers\Html;
-use frontend\assets\DropzoneAsset;
+use frontend\assets\DropzoneTaskCreateAsset;
 
 /* @var $model \frontend\models\CreateTaskForm */
 /* @var $categories array */
 
-DropzoneAsset::register($this);
+DropzoneTaskCreateAsset::register($this);
 ?>
 
 <section class="create__task">
@@ -102,13 +102,3 @@ DropzoneAsset::register($this);
     <?= Html::button('Опубликовать', ['type' => 'submit', 'class' => 'button', 'form' => 'task-form']) ?>
 
 </section>
-
-<script src="/js/dropzone.js"></script>
-<script>
-
-    var dropzone = new Dropzone(".create__file", {
-        url: "/tasks/load-files",
-        uploadMultiple: true,
-        paramName: "files",
-    });
-</script>
