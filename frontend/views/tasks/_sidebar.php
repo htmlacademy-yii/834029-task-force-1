@@ -6,6 +6,7 @@ use yii\helpers\Html;
 use yii\bootstrap\ActiveForm;
 use frontend\models\TaskFilterForm;
 
+$checkboxTemplate = '<label class="checkbox__legend">{input}<span>{labelTitle}</span></label>';
 ?>
 
 <section class="search-task">
@@ -47,13 +48,13 @@ use frontend\models\TaskFilterForm;
         <fieldset class="search-task__categories">
             <legend>Дополнительно</legend>
             <?=$form->field($filter, 'has_responses', [
-                'checkboxTemplate' => '<label class="checkbox__legend">{input}<span>{labelTitle}</span></label>'
+                'checkboxTemplate' => $checkboxTemplate
             ])->checkbox([
                 'class' => 'visually-hidden checkbox__input'
             ])?>
             <?=$form->field($filter, 'is_remote', [
-                'checkboxTemplate' => '<label class="checkbox__legend">{input}<span>{labelTitle}</span></label>'
-            ])->checkbox([
+                'checkboxTemplate' => $checkboxTemplate
+            ])->def->checkbox([
                 'class' => 'visually-hidden checkbox__input'
             ])?>
         </fieldset>

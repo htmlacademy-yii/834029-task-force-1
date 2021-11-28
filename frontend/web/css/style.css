@@ -1992,8 +1992,9 @@ footer {
       -ms-flex-direction: column;
           flex-direction: column; }
   .account__redaction-avatar img {
-    margin-left: -8px;
-    margin-right: 5px; }
+    margin-right: 15px;
+    object-fit: cover;
+    border-radius: 10px; }
 
 #upload-avatar {
   display: none;

@@ -1,136 +1,190 @@
 <?php
 
 use frontend\assets\DropzoneAccountAsset;
+use yii\bootstrap\ActiveForm;
+use yii\helpers\Html;
+
+/* @var $user \common\models\User */
+/* @var $model \frontend\models\AccountForm */
+/* @var $cities array */
+/* @var $categories array */
 
 DropzoneAccountAsset::register($this);
 
 $this->title = 'Настройки аккаунта';
+$checkboxTemplate = '<label class="checkbox__legend">{input}<span>{labelTitle}</span></label>';
 ?>
 <section class="account__redaction-wrapper">
     <h1>Редактирование настроек профиля</h1>
-    <form enctype="multipart/form-data" id="account" method="post">
+    <?php
+    $form = ActiveForm::begin(
+        [
+            'options' => ['id' => 'account'],
+            'enableClientValidation' => false,
+            'fieldConfig' => [
+                'errorOptions' => ['class' => 'registration__text-error', 'tag' => 'span'],
+            ],
+        ]
+    ); ?>
         <div class="account__redaction-section">
             <h3 class="div-line">Настройки аккаунта</h3>
             <div class="account__redaction-section-wrapper">
                 <div class="account__redaction-avatar">
-                    <img src="./img/man-glasses.jpg" width="156" height="156">
+                    <?= Html::img(
+                        $user->avatar ?? Yii::$app->params['user_no_image'],
+                        ['width' => 156, 'height' => 156]
+                    ) ?>
                     <input type="file" name="avatar" id="upload-avatar">
                     <label for="upload-avatar" class="link-regular">Сменить аватар</label>
                 </div>
                 <div class="account__redaction">
-                    <div class="field-container account__input account__input--name">
-                        <label for="200">Ваше имя</label>
-                        <input class="input textarea" id="200" name="" placeholder="Титов Денис" disabled>
-                    </div>
-                    <div class="field-container account__input account__input--email">
-                        <label for="201">email</label>
-                        <input class="input textarea" id="201" name="" placeholder="DenisT@bk.ru">
-                    </div>
-                    <div class="field-container account__input account__input--address">
-                        <label for="202">Адрес</label>
-                        <input class="input textarea" id="202" name="" placeholder="Санкт-Петербург, Московский район">
-                    </div>
-                    <div class="field-container account__input account__input--date">
-                        <label for="203">День рождения</label>
-                        <input id="203" class="input-middle input input-date" type="text" placeholder="15.08.1987">
-                    </div>
-                    <div class="field-container account__input account__input--info">
-                        <label for="204">Информация о себе</label>
-                        <textarea class="input textarea" rows="7" id="204" name="" placeholder="Place your text"></textarea>
-                    </div>
+                    <?= $form->field($model, 'name', [
+                        'options' => ['class' => 'field-container account__input account__input--name']
+                    ])->input('text', [
+                        'class' => 'input textarea', 'placeholder' => 'Титов Денис', 'value' => $user->name
+                    ])?>
+
+                    <?= $form->field($model, 'email', [
+                        'options' => ['class' => 'field-container account__input account__input--email']
+                    ])->input('text', [
+                        'class' => 'input textarea', 'placeholder' => 'DenisT@bk.ru', 'value' => $user->email
+                    ])?>
+
+                    <?= $form->field($model, 'address', [
+                        'options' => ['class' => 'field-container account__input account__input--address']
+                    ])->dropDownList($cities, ['class' => 'input textarea', 'value' => $user->city_id])?>
+
+                    <?= $form->field($model, 'birthday', [
+                        'options' => ['class' => 'field-container account__input account__input--date']
+                    ])->input('date', [
+                        'class' => 'input-middle input input-date',
+                        'placeholder' => '15.08.1987',
+                        'value' => $user->birthday,
+                    ])?>
+
+                    <?= $form->field($model, 'about', [
+                        'options' => ['class' => 'field-container account__input account__input--info']
+                    ])->textarea([
+                        'class' => 'input textarea',
+                        'rows' => 7,
+                        'placeholder' => 'Place your text',
+                        'value' => $user->about,
+                    ])?>
                 </div>
             </div>
             <h3 class="div-line">Выберите свои специализации</h3>
             <div class="account__redaction-section-wrapper">
+
                 <div class="search-task__categories account_checkbox--bottom">
-                    <label class="checkbox__legend">
-                        <input class="visually-hidden checkbox__input" type="checkbox" name="" value="" checked>
-                        <span>Курьерские услуги</span>
-                    </label>
-                    <label class="checkbox__legend">
-                        <input class="visually-hidden checkbox__input" type="checkbox" name="" value="" checked>
-                        <span>Грузоперевозки</span>
-                    </label>
-                    <label class="checkbox__legend">
-                        <input class="visually-hidden checkbox__input" type="checkbox" name="" value="">
-                        <span>Перевод текстов</span>
-                    </label>
-                    <label class="checkbox__legend">
-                        <input class="visually-hidden checkbox__input" type="checkbox" name="" value="" checked>
-                        <span>Ремонт транспорта</span>
-                    </label>
-                    <label class="checkbox__legend">
-                        <input class="visually-hidden checkbox__input" type="checkbox" name="" value="">
-                        <span>Удалённая помощь</span>
-                    </label>
-                    <label class="checkbox__legend">
-                        <input class="visually-hidden checkbox__input" id="210" type="checkbox" name="" value="">
-                        <span>Выезд на стрелку</span>
-                    </label>
+                    <?=$form->field($model, 'category', [
+                        'options' => ['tag' => false],
+                    ])->checkboxList($categories, [
+                        'tag' => false,
+                        'item' => function ($index, $label, $name, $checked, $value) use ($model) {
+                            $html = Html::checkbox($name, isset($model->category[$value]), [
+                                'class' => 'visually-hidden checkbox__input',
+                                'value' => $value
+                            ]);
+                            $html .= Html::tag('span', $label);
+                            $html = Html::tag('label', $html, [
+                                'class' => 'checkbox__legend'
+                            ]);
+                            return $html;
+                        }
+                    ])->label(false); ?>
                 </div>
             </div>
             <h3 class="div-line">Безопасность</h3>
             <div class="account__redaction-section-wrapper account__redaction">
-                <div class="field-container account__input">
-                    <label for="211">Новый пароль</label>
-                    <input class="input textarea" type="password" id="211" name="" value="moiparol">
-                </div>
-                <div class="field-container account__input">
-                    <label for="212">Повтор пароля</label>
-                    <input class="input textarea" type="password" id="212" name="" value="moiparol">
-                </div>
+                <?= $form->field($model, 'password', [
+                    'options' => ['class' => 'field-container account__input']
+                ])->input('password', ['class' => 'input textarea'])?>
+
+                <?= $form->field($model, 'repeat_password', [
+                    'options' => ['class' => 'field-container account__input']
+                ])->input('password', ['class' => 'input textarea'])?>
             </div>
 
             <h3 class="div-line">Фото работ</h3>
 
             <div class="account__redaction-section-wrapper account__redaction">
                 <span class="dropzone">Выбрать фотографии</span>
+                <?php foreach ($user->portfolios as $portfolio) : ?>
+                    <?= Html::a(
+                        Html::img(
+                            $portfolio->source,
+                            [
+                                'alt' => 'Фото работы',
+                                'style' => 'object-fit: cover;',
+                                'width' => 100,
+                                'height' => 100,
+                            ]
+                        ),
+                        $portfolio->source,
+                        ['target' => '_blank']
+                    ) ?>
+                <?php endforeach; ?>
             </div>
 
             <h3 class="div-line">Контакты</h3>
             <div class="account__redaction-section-wrapper account__redaction">
-                <div class="field-container account__input">
-                    <label for="213">Телефон</label>
-                    <input class="input textarea" type="tel" id="213" name="" placeholder="8 (555) 187 44 87">
-                </div>
-                <div class="field-container account__input">
-                    <label for="214">Skype</label>
-                    <input class="input textarea" type="password" id="214" name="" placeholder="DenisT">
-                </div>
-                <div class="field-container account__input">
-                    <label for="215">Другой мессенджер</label>
-                    <input class="input textarea" id="215" name="" placeholder="@DenisT">
-                </div>
+                <?= $form->field($model, 'phone', [
+                    'options' => ['class' => 'field-container account__input']
+                ])->input('tel', [
+                    'class' => 'input textarea', 'placeholder' => '8 (555) 187 44 87', 'value' => $user->phone
+                ])?>
+
+                <?= $form->field($model, 'skype', [
+                    'options' => ['class' => 'field-container account__input']
+                ])->input('text', [
+                    'class' => 'input textarea', 'placeholder' => 'DenisT', 'value' => $user->skype
+                ])?>
+
+                <?= $form->field($model, 'telegram', [
+                    'options' => ['class' => 'field-container account__input']
+                ])->input('text', [
+                    'class' => 'input textarea', 'placeholder' => '@DenisT', 'value' => $user->telegram
+                ])?>
             </div>
             <h3 class="div-line">Настройки сайта</h3>
             <h4>Уведомления</h4>
             <div class="account__redaction-section-wrapper account_section--bottom">
                 <div class="search-task__categories account_checkbox--bottom">
-                    <label class="checkbox__legend">
-                        <input class="visually-hidden checkbox__input" type="checkbox" name="" value="" checked>
-                        <span>Новое сообщение</span>
-                    </label>
-                    <label class="checkbox__legend">
-                        <input class="visually-hidden checkbox__input" type="checkbox" name="" value="" checked>
-                        <span>Действия по заданию</span>
-                    </label>
-                    <label class="checkbox__legend">
-                        <input class="visually-hidden checkbox__input" type="checkbox" name="" value="" checked>
-                        <span>Новый отзыв</span>
-                    </label>
+                    <?=$form->field($model, 'is_notify_about_message', [
+                        'options' => ['tag' => false],
+                        'checkboxTemplate' => $checkboxTemplate
+                    ])->checkbox([
+                        'class' => 'visually-hidden checkbox__input'
+                    ])?>
+                    <?=$form->field($model, 'is_notify_about_action', [
+                        'options' => ['tag' => false],
+                        'checkboxTemplate' => $checkboxTemplate
+                    ])->checkbox([
+                        'class' => 'visually-hidden checkbox__input'
+                    ])?>
+                    <?=$form->field($model, 'is_notify_about_review', [
+                        'options' => ['tag' => false],
+                        'checkboxTemplate' => $checkboxTemplate
+                    ])->checkbox([
+                        'class' => 'visually-hidden checkbox__input'
+                    ])?>
                 </div>
                 <div class="search-task__categories account_checkbox account_checkbox--secrecy">
-                    <label class="checkbox__legend">
-                        <input class="visually-hidden checkbox__input" type="checkbox" name="" value="">
-                        <span>Показывать мои контакты только заказчику</span>
-                    </label>
-                    <label class="checkbox__legend">
-                        <input class="visually-hidden checkbox__input" type="checkbox" name="" value="" checked>
-                        <span>Не показывать мой профиль</span>
-                    </label>
+                    <?=$form->field($model, 'is_show_contacts', [
+                        'options' => ['tag' => false],
+                        'checkboxTemplate' => $checkboxTemplate
+                    ])->checkbox([
+                        'class' => 'visually-hidden checkbox__input'
+                    ])?>
+                    <?=$form->field($model, 'is_show_profile', [
+                        'options' => ['tag' => false],
+                        'checkboxTemplate' => $checkboxTemplate
+                    ])->checkbox([
+                        'class' => 'visually-hidden checkbox__input'
+                    ])?>
                 </div>
             </div>
         </div>
         <button class="button" type="submit">Сохранить изменения</button>
-    </form>
+    <?php ActiveForm::end(); ?>
 </section>
