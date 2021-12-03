@@ -4,7 +4,12 @@ namespace frontend\models;
 
 use common\models\Category;
 use common\models\City;
+use common\models\User;
+use common\models\UserCategory;
+use Yii;
 use yii\base\Model;
+use yii\helpers\ArrayHelper;
+use yii\helpers\FileHelper;
 
 class AccountForm extends Model
 {
@@ -36,7 +41,6 @@ class AccountForm extends Model
                 [
                     'name',
                     'email',
-                    'avatar',
                     'address',
                     'about',
                     'password',
@@ -56,12 +60,19 @@ class AccountForm extends Model
                 ],
                 'boolean'
             ],
+            [['avatar'], 'file', 'extensions' => 'png, jpg'],
             ['phone', 'string', 'length' => 11],
             ['skype', 'string', 'min' => 3],
             ['telegram', 'string', 'min' => 1],
-            ['birthday', 'date', 'format' => 'dd.MM.yyyy'],
+            ['birthday', 'date', 'format' => 'yyyy-MM-dd'],
             [['address'], 'exist', 'targetClass' => City::class, 'targetAttribute' => ['address' => 'id']],
-            [['category'], 'exist', 'targetClass' => Category::class, 'targetAttribute' => ['category' => 'id']],
+            [['category'], 'each', 'rule' => [
+                    'exist',
+                    'skipOnError' => true,
+                    'targetClass' => Category::class,
+                    'targetAttribute' => ['category' => 'id']
+                ]
+            ],
         ];
     }
 
@@ -88,8 +99,72 @@ class AccountForm extends Model
         ];
     }
 
-    public function updateAvatar()
+    public function updateUser(User $user): ?User
     {
+        if ($this->validate()) {
+            $this->updateInformation($user);
+            $this->updateAvatar($user);
+            $this->updatePassword($user);
+            $this->updateNotifySettings($user);
+            $this->updateSpecializations($user);
 
+            $user->save();
+            return $user;
+        }
+
+        return null;
+    }
+
+    private function updateInformation(User $user)
+    {
+        $user->name = $this->name;
+        $user->email = $this->email;
+        $user->city_id = $this->address;
+        $user->birthday = $this->birthday;
+        $user->about = $this->about;
+        $user->phone = $this->phone;
+        $user->skype = $this->skype;
+        $user->telegram = $this->telegram;
+    }
+
+    private function updateAvatar(User $user)
+    {
+        if ($this->avatar) {
+            $upload_dir = Yii::getAlias('@webroot/uploads/avatar');
+            if(!file_exists($upload_dir)) {
+                FileHelper::createDirectory($upload_dir);
+            }
+
+            $new_name = Yii::$app->security->generateRandomString(8) . '.' . $this->avatar->getExtension();
+            $this->avatar->saveAs($upload_dir . '/' . $new_name);
+            $user->avatar = $new_name;
+        }
+    }
+
+    private function updatePassword(User $user): void
+    {
+        if ($this->password) {
+            $user->password_hash = Yii::$app->getSecurity()->generatePasswordHash($this->password);
+        }
+    }
+
+    private function updateNotifySettings(User $user): void
+    {
+        $user->is_show_profile = $this->is_show_profile;
+        $user->is_show_contacts = $this->is_show_contacts;
+        $user->is_notify_about_message = $this->is_notify_about_message;
+        $user->is_notify_about_action = $this->is_notify_about_action;
+        $user->is_notify_about_review = $this->is_notify_about_review;
+    }
+
+    private function updateSpecializations(User $user)
+    {
+        if (!empty($this->category)) {
+            $user->role = User::WORKER_ROLE;
+            $user->setCategoryIds($this->category);
+        } else {
+            $user->role = User::CUSTOMER_ROLE;
+            $user->setCategoryIds([]);
+        }
     }
 }

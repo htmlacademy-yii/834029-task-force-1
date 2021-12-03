@@ -8,6 +8,7 @@ use common\models\User;
 use frontend\models\AccountForm;
 use Yii;
 use yii\helpers\ArrayHelper;
+use yii\web\UploadedFile;
 
 class AccountController extends BaseController
 {
@@ -30,6 +31,15 @@ class AccountController extends BaseController
         $model->is_notify_about_message = $user->is_notify_about_message;
         $model->is_notify_about_action = $user->is_notify_about_action;
         $model->is_notify_about_review = $user->is_notify_about_review;
+
+        if(Yii::$app->request->isPost) {
+            $model->load(Yii::$app->request->post());
+            $model->avatar = UploadedFile::getInstance($model, 'avatar');
+
+            if ($model->validate() && $user = $model->updateUser($user)) {
+                return $this->redirect(['index']);
+            }
+        }
 
         return $this->render('index', compact('user', 'model', 'categories', 'cities'));
     }

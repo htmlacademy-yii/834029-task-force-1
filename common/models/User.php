@@ -15,6 +15,8 @@ class User extends base\User implements IdentityInterface
     public const CUSTOMER_ROLE = 'customer';
     public const NOW_ONLINE_MINUTES = 30;
 
+    protected array $category_ids;
+
     public function getFavoriteUsers() : ActiveQuery
     {
         return $this->hasMany(Favorite::class, ['customer_id' => 'id']);
@@ -135,5 +137,31 @@ class User extends base\User implements IdentityInterface
     public function validateAuthKey($authKey)
     {
         // TODO: Implement validateAuthKey() method.
+    }
+
+    public function getCategoryIds(): array
+    {
+        return $this->category_ids;
+    }
+
+    public function setCategoryIds(array $category_ids): void
+    {
+        $this->category_ids = $category_ids;
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        if (isset($this->category_ids)) {
+            UserCategory::deleteAll(['user_id' => $this->id]);
+            $values = [];
+            foreach ($this->category_ids as $id) {
+                $values[] = [$this->id, $id];
+            }
+            self::getDb()->createCommand()
+                ->batchInsert(UserCategory::tableName(), ['user_id', 'category_id'], $values)
+                ->execute();
+        }
+
+        parent::afterSave($insert, $changedAttributes);
     }
 }

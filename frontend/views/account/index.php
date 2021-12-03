@@ -34,7 +34,7 @@ $checkboxTemplate = '<label class="checkbox__legend">{input}<span>{labelTitle}</
                         $user->avatar ?? Yii::$app->params['user_no_image'],
                         ['width' => 156, 'height' => 156]
                     ) ?>
-                    <input type="file" name="avatar" id="upload-avatar">
+                    <?= $form->field($model, 'avatar')->fileInput(['id' => 'upload-avatar'])->label(false) ?>
                     <label for="upload-avatar" class="link-regular">Сменить аватар</label>
                 </div>
                 <div class="account__redaction">
