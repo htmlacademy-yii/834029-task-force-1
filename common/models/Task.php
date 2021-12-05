@@ -147,6 +147,11 @@ class Task extends base\Task
         return $this->worker_id === $user_id;
     }
 
+    public function isCustomer(int $user_id): bool
+    {
+        return $this->customer_id === $user_id;
+    }
+
     public function getNewMessages(int $user_id): \yii\db\ActiveQuery
     {
         return Message::find()->where([

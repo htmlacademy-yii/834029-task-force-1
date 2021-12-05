@@ -11,6 +11,8 @@ use common\models\User;
 
 $sort = Yii::$app->request->get('sort') ?? '';
 $active_link_class = 'user__search-item--current';
+
+$this->title = 'Список пользователей';
 ?>
 
 <section class="user__search">

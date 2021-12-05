@@ -5,6 +5,7 @@ use yii\bootstrap\ActiveForm;
 /* @var $model \frontend\models\SignupForm */
 /* @var $cities array */
 
+$this->title = 'Регистрация аккаунта';
 ?>
 
 <section class="registration__user">

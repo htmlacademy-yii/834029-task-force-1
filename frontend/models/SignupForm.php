@@ -31,7 +31,7 @@ class SignupForm extends Model
                 'email',
                 'unique',
                 'targetClass' => '\common\models\User',
-                'message' => 'Ползователь с таким email уже существует'
+                'message' => 'Пользователь с таким email уже существует'
             ],
             [
                 'city_id',

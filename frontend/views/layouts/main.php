@@ -4,11 +4,7 @@
 /* @var $content string */
 
 use yii\helpers\Html;
-use yii\bootstrap\Nav;
-use yii\bootstrap\NavBar;
-use yii\widgets\Breadcrumbs;
 use frontend\assets\AppAsset;
-use common\widgets\Alert;
 
 AppAsset::register($this);
 ?>
@@ -27,7 +23,7 @@ AppAsset::register($this);
     <header class="page-header">
         <div class="main-container page-header__container">
             <div class="page-header__logo">
-                <a href="landing.html">
+                <a href="/">
                     <svg class="page-header__logo-image" id="Layer_2" xmlns="http://www.w3.org/2000/svg"
                          viewBox="0 0 1634 646.35">
                         <title>taskforce_logo2-01</title>
@@ -136,10 +132,10 @@ AppAsset::register($this);
                 <div class="account__pop-up">
                     <ul class="account__pop-up-list">
                         <li>
-                            <a href="mylist.html">Мои задания</a>
+                            <?=Html::a('Мои задания', ['/my-list/new'])?>
                         </li>
                         <li>
-                            <a href="account.html">Настройки</a>
+                            <?=Html::a('Настройки', ['/account'])?>
                         </li>
                         <li>
                             <?=Html::a('Выход', ['/logout'], ['data-method' => 'POST'])?>

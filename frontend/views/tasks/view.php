@@ -11,7 +11,9 @@ use frontend\components\RatingWidget;
 use yii\helpers\Html;
 
 \frontend\assets\YandexMapAsset::register($this);
-\frontend\assets\MessangerAsset::register($this)
+\frontend\assets\MessangerAsset::register($this);
+
+$this->title = $task->title;
 ?>
 
 <section class="content-view">
@@ -194,9 +196,11 @@ use yii\helpers\Html;
             <?php endif; ?>
         </div>
     </div>
-    <div id="chat-container">
-        <chat class="connect-desk__chat" task="<?=$task->id?>"></chat>
-    </div>
+    <?php if ($task->inWork() && ($task->isWorker($user_id) || $task->isCustomer($user_id))) : ?>
+        <div id="chat-container">
+            <chat class="connect-desk__chat" task="<?=$task->id?>"></chat>
+        </div>
+    <?php endif; ?>
 </section>
 
 <?php if (!$is_customer && $task->isNew()) : ?>
