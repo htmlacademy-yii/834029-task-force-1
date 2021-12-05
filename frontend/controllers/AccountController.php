@@ -4,6 +4,7 @@ namespace frontend\controllers;
 
 use common\models\Category;
 use common\models\City;
+use common\models\Portfolio;
 use common\models\User;
 use frontend\models\AccountForm;
 use Yii;
@@ -37,10 +38,26 @@ class AccountController extends BaseController
             $model->avatar = UploadedFile::getInstance($model, 'avatar');
 
             if ($model->validate() && $user = $model->updateUser($user)) {
-                return $this->redirect(['index']);
+                return $this->redirect(['/account']);
             }
         }
 
         return $this->render('index', compact('user', 'model', 'categories', 'cities'));
+    }
+
+    public function actionLoadFiles(): bool
+    {
+        if (Yii::$app->request->isAjax) {
+            $files = UploadedFile::getInstancesByName('files');
+            if (!empty($files)) {
+                $user_id = Yii::$app->user->identity->getId();
+                Portfolio::deleteAll(['user_id' => $user_id]);
+                Portfolio::saveFiles($files, $user_id);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 }

@@ -5,10 +5,8 @@ namespace frontend\models;
 use common\models\Category;
 use common\models\City;
 use common\models\User;
-use common\models\UserCategory;
 use Yii;
 use yii\base\Model;
-use yii\helpers\ArrayHelper;
 use yii\helpers\FileHelper;
 
 class AccountForm extends Model
@@ -137,7 +135,7 @@ class AccountForm extends Model
 
             $new_name = Yii::$app->security->generateRandomString(8) . '.' . $this->avatar->getExtension();
             $this->avatar->saveAs($upload_dir . '/' . $new_name);
-            $user->avatar = $new_name;
+            $user->avatar = '/uploads/avatar/' . $new_name;
         }
     }
 
